@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings — The Papyrus</title>
+    <meta name="description" content="Manage your Papyrus account, security settings, and personal preferences in our secure environment.">
+    <link rel="stylesheet" href="shared-layout.css">
+    <link rel="stylesheet" href="transitions.css">
+    <style>
+        /* ======= ACCOUNT PAGE SPECIFIC STYLES ======= */
+        .settings-grid { display: grid; grid-template-columns: 320px 1fr; gap: 2.5rem; }
+        .profile-side { position: sticky; top: 100px; height: fit-content; }
+        .profile-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+        }
+        .large-avatar {
+            width: 110px; height: 110px;
+            margin: 0 auto 1.5rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #0ea5e9);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.8rem; color: #fff; font-weight: 800;
+            box-shadow: 0 10px 30px rgba(99,102,241,0.2);
+            border: 4px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+        .large-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-info h2 { font-size: 1.4rem; color: #fff; margin-bottom: 0.3rem; }
+        .profile-info p { font-size: 0.88rem; color: rgba(255,255,255,0.4); margin-bottom: 1.5rem; }
+
+        .settings-content { display: flex; flex-direction: column; gap: 1.75rem; }
+        .settings-section {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+        .section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .section-header i { font-size: 1.2rem; font-style: normal; }
+        .section-header h3 { font-size: 1.15rem; color: #fff; }
+
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; }
+        .form-input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .form-input:focus { border-color: #6366f1; background: rgba(99,102,241,0.05); }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; }
+        .btn-ghost { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn-danger { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+        .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+        .security-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.1rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 14px;
+            margin-bottom: 0.8rem;
+        }
+        .security-info { display: flex; align-items: center; gap: 1rem; }
+        .security-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .security-text h4 { font-size: 0.95rem; color: #fff; margin-bottom: 0.15rem; }
+        .security-text p { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #6366f1; }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .danger-zone { border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.02); }
+        .danger-zone h3 { color: #f87171; }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Orbs -->
+    <div class="page-orbs">
+        <div class="page-orb page-orb-1"></div>
+        <div class="page-orb page-orb-2"></div>
+    </div>
+
+    <!-- =========== SIDEBAR =========== -->
+    <aside class="sidebar" id="sidebar">
+        <a href="dashboard.html" class="sidebar-logo">
+            <img src="White AI logo.png" alt="The Papyrus">
+            <span>The Papyrus</span>
+        </a>
+
+        <div class="sidebar-section-label">Navigation</div>
+        <div class="sidebar-nav">
+            <a href="dashboard.html" class="sidebar-link">
+                <span class="link-icon">📊</span> Dashboard
+            </a>
+            <div class="sidebar-dropdown">
+                <button class="sidebar-link" onclick="this.parentElement.classList.toggle('open')" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> Tools<span class="link-badge">11</span></div>
+                    <span class="dropdown-arrow" style="transition:transform 0.2s;">▼</span>
+                </button>
+                <div class="sidebar-dropdown-menu">
+                    <a class="sidebar-sublink" onclick="navigateToTool('phishing')">🛡️ Phishing Scanner</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('ai_threat')">🤖 AI Threat Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('deepfake')">🎭 Deepfake Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('blockchain')">⛓️ File Verifier</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('vault')">🔒 Encryption Vault</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('dlp')">🚫 Data Leakage Prev</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('password')">🔐 Password Guardian</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('api_management')">🔑 Secure API Mgmt</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('fraud')">🕵️ Fraud Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('privacy_ai')">🧬 Privacy AI</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('breach_monitor')">🔍 Breach Monitor</a>
+                </div>
+            </div>
+            <a href="quiz.html" class="sidebar-link">
+                <span class="link-icon">🧠</span> Security Quiz
+            </a>
+            <a href="playbook.html" class="sidebar-link">
+                <span class="link-icon">📖</span> IR Playbook
+            </a>
+            <a href="account.html" class="sidebar-link active">
+                <span class="link-icon">👤</span> Account
+            </a>
+            <a href="about.html" class="sidebar-link">
+                <span class="link-icon">ℹ️</span> About
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+             <button class="gemini-status-btn" onclick="window.openGeminiSettings()"
+                style="display:flex;align-items:center;justify-content:center;gap:0.5rem;
+                width:100%;padding:0.75rem;margin-bottom:0.75rem;
+                background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);
+                border-radius:10px;color:#a5b4fc;font-size:0.85rem;font-weight:700;
+                cursor:pointer;font-family:Outfit,sans-serif;transition:all 0.2s;">
+                ⚙️ AI Settings
+            </button>
+            <a href="login.html" class="sidebar-sign-in-btn" id="sidebar-auth-btn">🔑 Sign In / Up</a>
+        </div>
+    </aside>
+
+    <!-- =========== MAIN CONTENT =========== -->
+    <div class="page-main">
+        <header class="page-topbar">
+            <div style="display:flex;align-items:center;gap:1.5rem;">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <div class="topbar-title-group">
+                    <span class="topbar-page-title">Account Settings</span>
+                    <span class="topbar-page-sub">Profile & Privacy</span>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button class="lang-toggle-btn" data-en="EN" data-hi="हिन्दी"><i>🌐</i> EN</button>
+                <div class="topbar-status"><div class="status-dot"></div>Secure View</div>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="settings-grid">
+                
+                <!-- Profile Summary -->
+                <div class="profile-card">
+                    <div class="large-avatar" id="profile-avatar">?</div>
+                    <h2 class="profile-name" id="profile-name">Loading...</h2>
+                    <p class="profile-email" id="profile-email">email@example.com</p>
+                    <div class="member-badge">
+                        ✨ Papyrus Founder
+                    </div>
+                </div>
+
+                <!-- Settings Forms -->
+                <div class="settings-content">
+                    
+                    <!-- Personal Info -->
+                    <section class="settings-section">
+                        <div class="section-header">
+                            <i>👤</i>
+                            <h3>Personal Information</h3>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Display Name</label>
+                                <input type="text" class="form-input" id="input-name" placeholder="Your Name">
+                            </div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" class="form-input" id="input-username" placeholder="username" disabled>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" class="form-input" id="input-email" placeholder="email@example.com" disabled>
+                        </div>
+                        <div class="settings-footer">
+                            <button class="btn btn-primary" onclick="updateProfile()">Save Changes</button>
+                        </div>
+                    </section>
+
+                    <!-- Security -->
+                    <section class="settings-section">
+                        <div class="section-header">
+                            <i>🛡️</i>
+                            <h3>Security & Privacy</h3>
+                        </div>
+                        
+                        <div class="security-item">
+                            <div class="security-info">
+                                <div class="security-icon">🔑</div>
+                                <div class="security-text">
+                                    <h4>Account Password</h4>
+                                    <p>Last updated 3 months ago</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-ghost" onclick="handlePasswordReset()">Change</button>
+                        </div>
+
+                        <div class="security-item">
+                            <div class="security-info">
+                                <div class="security-icon">📱</div>
+                                <div class="security-text">
+                                    <h4>Two-Factor Authentication</h4>
+                                    <p>Add an extra layer of security</p>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="tfa-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="security-item">
+                            <div class="security-info">
+                                <div class="security-icon">🌐</div>
+                                <div class="security-text">
+                                    <h4>Privacy Mode</h4>
+                                    <p>Hide your profile from global stats</p>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- Preferences -->
+                    <section class="settings-section">
+                        <div class="section-header">
+                            <i>⚙️</i>
+                            <h3>Preferences</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Language</label>
+                            <select class="form-input" id="pref-lang" style="width:100%; background:#000;">
+                                <option value="en">English (Global)</option>
+                                <option value="hi">Hindi (हिन्दी)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Login Notifications</label>
+                            <p style="font-size:0.8rem; color:rgba(255,255,255,0.4);">Email me every time a login occurs from a new device.</p>
+                            <label class="switch" style="margin-top:0.5rem;">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- Danger Zone -->
+                    <section class="settings-section danger-zone">
+                        <div class="section-header">
+                            <i>⚠️</i>
+                            <h3>Danger Zone</h3>
+                        </div>
+                        <p style="font-size:0.85rem; color:rgba(255,255,255,0.5); margin-bottom:1.5rem;">Once you delete your account, there is no going back. Please be certain.</p>
+                        <button class="btn btn-danger">Delete Papyrus Account</button>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Logic -->
+    <script src="script.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut, updateProfile as fbUpdateProfile, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",
+            authDomain: "ai-studio-applet-webapp-ed2b6.firebaseapp.com",
+            projectId: "ai-studio-applet-webapp-ed2b6",
+            storageBucket: "ai-studio-applet-webapp-ed2b6.firebasestorage.app",
+            messagingSenderId: "343966893252",
+            appId: "1:343966893252:web:1d15560bc9e2834d987591"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Populating UI
+            document.getElementById('profile-name').textContent = user.displayName || 'Security User';
+            document.getElementById('profile-email').textContent = user.email;
+            document.getElementById('input-name').value = user.displayName || '';
+            document.getElementById('input-email').value = user.email;
+            
+            const initial = (user.displayName || user.email).charAt(0).toUpperCase();
+            const avatarEl = document.getElementById('profile-avatar');
+            if (user.photoURL) {
+                avatarEl.innerHTML = `<img src="${user.photoURL}" alt="Profile">`;
+            } else {
+                avatarEl.textContent = initial;
+            }
+
+            const sidebarBtn = document.getElementById('sidebar-auth-btn');
+            if (sidebarBtn) {
+                sidebarBtn.textContent = `👤 ${user.displayName || user.email.split('@')[0]}`;
+                sidebarBtn.href = 'dashboard.html';
+            }
+        });
+
+        window.handleSignOut = () => {
+            signOut(auth).then(() => {
+                window.location.href = 'login.html';
+            });
+        };
+
+        window.updateProfile = async () => {
+            const newName = document.getElementById('input-name').value;
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await fbUpdateProfile(user, { displayName: newName });
+                    alert("Profile updated successfully!");
+                    location.reload();
+                } catch (e) {
+                    alert("Error updating profile: " + e.message);
+                }
+            }
+        };
+
+        window.handlePasswordReset = async () => {
+            const email = auth.currentUser.email;
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("Password reset email sent to " + email);
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+    </script>
+</body>
+</html>

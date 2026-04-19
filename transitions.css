@@ -1,0 +1,18 @@
+/* =====================================================
+   PAGE TRANSITIONS — The Papyrus
+   Smooth fade-in on page load, fade-out on navigate
+   ===================================================== */
+
+/* Page starts invisible, transitions in */
+body {
+    opacity: 0;
+    transition: opacity 0.45s ease;
+}
+body.page-loaded {
+    opacity: 1;
+}
+body.page-leaving {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}

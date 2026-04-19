@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: tasks
+    // Document ID: taskId
+    // Fields:
+    //   - title: string (required, 1-500 chars)
+    //   - completed: bool (required)
+    //   - createdAt: timestamp (required)
+    //   - userId: string (required, must match auth.uid)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidTask(data) {
+      return data.keys().hasAll(['title', 'completed', 'createdAt', 'userId']) &&
+             data.keys().hasOnly(['title', 'completed', 'createdAt', 'userId']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 500 &&
+             data.completed is bool &&
+             data.createdAt is timestamp &&
+             data.userId is string && data.userId == request.auth.uid;
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidTask(request.resource.data);
+      allow update: if isAuthenticated() && 
+                      resource.data.userId == request.auth.uid && 
+                      isValidTask(request.resource.data) &&
+                      request.resource.data.userId == resource.data.userId &&
+                      request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

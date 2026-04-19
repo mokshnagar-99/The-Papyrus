@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services & Tools — The Papyrus</title>
+    <meta name="description" content="Access all AI-powered security tools on The Papyrus — Phishing Scanner, Password Guardian, Blockchain Verifier, and File Encryption Vault.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-layout.css?v=1.3">
+    <link rel="stylesheet" href="transitions.css">
+    <style>
+    /* Section divider between tool groups */
+    .section-divider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 2.5rem 0 2rem;
+    }
+    .section-divider-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border-color);
+    }
+    .section-divider-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,0.25);
+        white-space: nowrap;
+        padding: 0.4rem 1rem;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 100px;
+    }
+    /* Email Guardian card special styling */
+    .email-guardian-card {
+        background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(34,211,238,0.04) 100%);
+        border-color: rgba(99,102,241,0.25) !important;
+        position: relative;
+        overflow: hidden;
+    }
+    .email-guardian-card::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 180px; height: 180px;
+        background: radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%);
+        pointer-events: none;
+    }
+    .email-connect-list {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin: 1rem 0;
+    }
+    .email-provider-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.85rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 100px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.6);
+    }
+    /* Page footer */
+    .page-footer {
+        padding: 1.5rem 2rem;
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+        color: rgba(255,255,255,0.2);
+        font-size: 0.78rem;
+    }
+    /* topbar signin link */
+    .topbar-signin {
+        padding: 0.5rem 1.1rem;
+        background: rgba(99,102,241,0.12);
+        border: 1px solid rgba(99,102,241,0.3);
+        border-radius: 10px;
+        color: #a5b4fc;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .topbar-signin:hover { background: rgba(99,102,241,0.22); }
+    </style>
+</head>
+<body>
+
+    <div class="page-orbs">
+        <div class="page-orb page-orb-1"></div>
+        <div class="page-orb page-orb-2"></div>
+    </div>
+
+    <!-- ======= SIDEBAR ======= -->
+    <aside class="sidebar" id="sidebar">
+        <a href="index.html" class="sidebar-logo">
+            <img src="White AI logo.png" alt="The Papyrus">
+            <span>The Papyrus</span>
+        </a>
+
+        <div class="sidebar-section-label">Navigation</div>
+        <div class="sidebar-nav">
+            <a href="index.html" class="sidebar-link">
+                <span class="link-icon">🏠</span> <span data-en="Home" data-hi="होम">Home</span>
+            </a>
+            
+            <div class="sidebar-dropdown open">
+                <button class="sidebar-link active" onclick="this.parentElement.classList.toggle('open')" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> <span data-en="Tools" data-hi="उपकरण">Tools</span><span class="link-badge">11</span></div>
+                    <span class="dropdown-arrow" style="transition:transform 0.2s;">▼</span>
+                </button>
+                <div class="sidebar-dropdown-menu">
+                    <a class="sidebar-sublink" onclick="navigateToTool('phishing')">🛡️ Phishing Scanner</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('ai_threat')">🤖 AI Threat Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('deepfake')">🎭 Deepfake Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('blockchain')">⛓️ File Verifier</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('vault')">🔒 Encryption Vault</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('dlp')">🚫 Data Leakage Prev</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('password')">🔐 Password Guardian</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('api_management')">🔑 Secure API Mgmt</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('fraud')">🕵️ Fraud Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('privacy_ai')">🧬 Privacy AI</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('breach_monitor')">🔍 Breach Monitor</a>
+                </div>
+            </div>
+            
+            <a href="quiz.html" class="sidebar-link">
+                <span class="link-icon">🧠</span> <span data-en="Security Quiz" data-hi="सुरक्षा प्रश्नोत्तरी">Security Quiz</span>
+            </a>
+            <a href="playbook.html" class="sidebar-link">
+                <span class="link-icon">📖</span> <span data-en="IR Playbook" data-hi="आईआर प्लेबुक">IR Playbook</span>
+            </a>
+            <a href="account.html" class="sidebar-link">
+                <span class="link-icon">👤</span> Account
+            </a>
+            <a href="about.html" class="sidebar-link">
+                <span class="link-icon">ℹ️</span> About
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <button class="gemini-status-btn" onclick="openGeminiSettings()"
+                style="display:flex;align-items:center;justify-content:center;gap:0.5rem;
+                width:100%;padding:0.75rem;margin-bottom:0.75rem;
+                background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);
+                border-radius:10px;color:#a5b4fc;font-size:0.85rem;font-weight:700;
+                cursor:pointer;font-family:Outfit,sans-serif;transition:all 0.2s;">
+                ⚙️ AI Settings
+            </button>
+            <a href="login.html" class="sidebar-sign-in-btn">
+                🔑 Sign In / Sign Up
+            </a>
+        </div>
+    </aside>
+
+    <!-- ======= MAIN ======= -->
+    <div class="page-main">
+
+        <!-- Top Bar -->
+        <header class="page-topbar">
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <div class="topbar-title-group">
+                    <span class="topbar-page-title" data-en="Services & Tools" data-hi="सेवाएं और उपकरण">Services & Tools</span>
+                    <span class="topbar-page-sub" data-en="All 11 AI-powered simulators available" data-hi="सभी 11 एआई-संचालित सिमुलेटर उपलब्ध हैं">All 11 AI-powered simulators available</span>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button class="lang-toggle-btn" data-en="EN" data-hi="हिन्दी"><i>🌐</i> EN</button>
+                <div class="topbar-status">
+                    <div class="status-dot"></div>
+                    <span data-en="All Tools Online" data-hi="सभी उपकरण ऑनलाइन">All Tools Online</span>
+                </div>
+                <a href="login.html" class="topbar-signin" data-en="Sign In" data-hi="साइन इन">Sign In</a>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="page-content">
+
+            <!-- Threat Detection -->
+            <div class="content-section-header">
+                <div class="content-badge" data-en="Threat Detection" data-hi="खतरे की पहचान">Threat Detection</div>
+                <h1 class="content-title" data-en="Security Tools & Simulators" data-hi="सुरक्षा उपकरण और सिमुलेटर">Security Tools & Simulators</h1>
+                <p class="content-subtitle" data-en="Click any tool card to launch its interactive simulator. All processing runs locally in your browser — no data is ever sent to a server." data-hi="इंटरैक्टिव सिम्युलेटर लॉन्च करने के लिए किसी भी टूल कार्ड पर क्लिक करें। सभी प्रोसेसिंग आपके ब्राउज़र में स्थानीय रूप से चलती है — कोई भी डेटा कभी सर्वर पर नहीं भेजा जाता है।">Click any tool card to launch its interactive simulator. All processing runs locally in your browser — no data is ever sent to a server.</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Phishing -->
+                <div class="content-card clickable" onclick="openSimulator('phishing')">
+                    <div class="card-icon">🛡️</div>
+                    <div class="card-title" data-en="Phishing Email Scanner" data-hi="फ़िशिंग ईमेल स्कैनर">Phishing Email Scanner</div>
+                    <div class="card-desc" data-en="NLP-powered analysis of emails and messages to identify phishing attempts, urgency triggers, and social engineering patterns." data-hi="फ़िशिंग प्रयासों, तात्कालिकता ट्रिगर्स और सोशल इंजीनियरिंग पैटर्न की पहचान करने के लिए ईमेल और संदेशों का एनएलपी-आधारित विश्लेषण।">NLP-powered analysis of emails and messages to identify phishing attempts, urgency triggers, and social engineering patterns in real time.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">NLP</span>
+                        <span class="card-tag">AI Heuristics</span>
+                        <span class="card-tag">Instant</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+
+                <!-- AI Threat -->
+                <div class="content-card clickable" onclick="openSimulator('ai_threat')">
+                    <div class="card-icon">🤖</div>
+                    <div class="card-title" data-en="AI Threat Detection" data-hi="एआई खतरा पहचान">AI-Based Threat Detection</div>
+                    <div class="card-desc" data-en="Real-time monitoring of unusual behavior using machine learning models trained on known malicious patterns." data-hi="ज्ञात दुर्भावनापूर्ण पैटर्न पर प्रशिक्षित मशीन लर्निंग मॉडल का उपयोग करके असामान्य व्यवहार की वास्तविक समय की निगरानी।">Real-time monitoring of unusual behavior using machine learning models trained on known malicious patterns and anomaly signatures.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">ML</span>
+                        <span class="card-tag">Behavioral</span>
+                        <span class="card-tag">Real-time</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+
+                <!-- Deepfake -->
+                <div class="content-card clickable" onclick="openSimulator('deepfake')">
+                    <div class="card-icon">🎭</div>
+                    <div class="card-title">Deepfake Detection</div>
+                    <div class="card-desc">AI models that detect manipulated audio and video content using frequency analysis and neural network classification.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">Video AI</span>
+                        <span class="card-tag">Audio</span>
+                        <span class="card-tag">CNN</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+            </div>
+
+            <!-- Data Protection -->
+            <div class="section-divider">
+                <div class="section-divider-line"></div>
+                <div class="section-divider-label">⛓️ Data Protection & Privacy</div>
+                <div class="section-divider-line"></div>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Blockchain -->
+                <div class="content-card clickable" onclick="openSimulator('blockchain')">
+                    <div class="card-icon">⛓️</div>
+                    <div class="card-title">Blockchain File Verification</div>
+                    <div class="card-desc">Tamper-proof file authentication using SHA-256 cryptographic hashes. Upload a file to generate its hash and verify integrity against an original.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">SHA-256</span>
+                        <span class="card-tag">Blockchain</span>
+                        <span class="card-tag">Local</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+
+                <!-- Encryption -->
+                <div class="content-card clickable" onclick="openSimulator('vault')">
+                    <div class="card-icon">🔒</div>
+                    <div class="card-title">File Encryption Vault</div>
+                    <div class="card-desc">Military-grade AES-256 file encryption engine. Lock any file with a custom password and download the secure .papyrus blob. Decrypt any time.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">AES-256</span>
+                        <span class="card-tag">PBKDF2</span>
+                        <span class="card-tag">Offline</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+
+                <!-- DLP -->
+                <div class="content-card clickable" onclick="openSimulator('dlp')">
+                    <div class="card-icon">🚫</div>
+                    <div class="card-title">Data Leakage Prevention</div>
+                    <div class="card-desc">Monitoring and prevention of unauthorized data sharing with content-aware policies and outbound traffic analysis.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">DLP</span>
+                        <span class="card-tag">Policy</span>
+                        <span class="card-tag">Monitor</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+            </div>
+
+            <!-- Access Control -->
+            <div class="section-divider">
+                <div class="section-divider-line"></div>
+                <div class="section-divider-label">🔐 Access Control & Monitoring</div>
+                <div class="section-divider-line"></div>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Password -->
+                <div class="content-card clickable" onclick="openSimulator('password')">
+                    <div class="card-icon">🔐</div>
+                    <div class="card-title">Smart Password Guardian</div>
+                    <div class="card-desc">Live password entropy analyzer. Get immediate feedback on complexity, vulnerability to brute-force, and pattern weaknesses with strength scoring.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">Entropy</span>
+                        <span class="card-tag">Real-time</span>
+                        <span class="card-tag">AI</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+
+                <!-- API -->
+                <div class="content-card clickable" onclick="openSimulator('api_management')">
+                    <div class="card-icon">🔑</div>
+                    <div class="card-title">Secure API Management</div>
+                    <div class="card-desc">API key storage, rotation scheduling, and anomaly detection for developers managing multiple service credentials.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">API Keys</span>
+                        <span class="card-tag">Rotation</span>
+                        <span class="card-tag">Vault</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+
+                <!-- Fraud -->
+                <div class="content-card clickable" onclick="openSimulator('fraud')">
+                    <div class="card-icon">🕵️</div>
+                    <div class="card-title">Fraud Detection</div>
+                    <div class="card-desc">ML models for identifying suspicious transaction patterns, anomalous login behaviour, and account takeover attempts.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">ML</span>
+                        <span class="card-tag">Transactions</span>
+                        <span class="card-tag">Behavioral</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+
+                <!-- Privacy AI -->
+                <div class="content-card clickable" onclick="openSimulator('privacy_ai')">
+                    <div class="card-icon">🧬</div>
+                    <div class="card-title">Privacy-Preserving AI</div>
+                    <div class="card-desc">Federated learning and differential privacy techniques that allow model training without exposing raw user data.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">Federated</span>
+                        <span class="card-tag">Privacy</span>
+                        <span class="card-tag">AI</span>
+                    </div>
+                    <div class="card-cta">Launch Simulator <span class="card-arrow">→</span></div>
+                </div>
+
+                <!-- Breach Monitor -->
+                <div class="content-card clickable" onclick="openSimulator('breach_monitor')" style="border-color:rgba(239,68,68,0.15);">
+                    <div class="card-icon">🔍</div>
+                    <div class="card-title" style="display:flex;align-items:center;gap:0.6rem;">Dark Web Breach Monitor <span style="font-size:0.65rem;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:0.15rem 0.5rem;border-radius:4px;font-weight:700;">NEW</span></div>
+                    <div class="card-desc">Check if your passwords have appeared in known data breaches using the HIBP k-Anonymity API. Privacy-safe — your password never leaves your device.</div>
+                    <div class="card-tags">
+                        <span class="card-tag">HIBP API</span>
+                        <span class="card-tag">k-Anonymity</span>
+                        <span class="card-tag">SHA-1</span>
+                    </div>
+                    <div class="card-cta">Launch Monitor <span class="card-arrow">→</span></div>
+                </div>
+            </div>
+
+            <!-- ⬇️ NEW: Email Guardian Integration -->
+            <div class="section-divider">
+                <div class="section-divider-line"></div>
+                <div class="section-divider-label">📧 Live Email Protection</div>
+                <div class="section-divider-line"></div>
+            </div>
+
+            <div class="cards-grid" style="margin-bottom:0;">
+                <!-- Email Guardian FULL-WIDTH -->
+                <div class="content-card clickable email-guardian-card" style="grid-column:1/-1;" onclick="openSimulator('email_guardian')">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;">
+                        <div style="flex:1;min-width:220px;">
+                            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                                <div class="card-icon" style="margin:0;font-size:2rem;">📧</div>
+                                <div>
+                                    <div class="card-title" style="margin:0;display:flex;align-items:center;gap:0.6rem;">Email Guardian
+                                        <span style="font-size:0.62rem                            <div class="card-tags">
+                                <span class="card-tag">Real-time</span>
+                                <span class="card-tag">AI-Powered</span>
+                                <span class="card-tag">OAuth 2.0</span>
+                                <span class="card-tag">Zero-Read Policy</span>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.75rem;flex-shrink:0;">
+                            <div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:12px;padding:0.85rem 1.25rem;text-align:center;">
+                                <div style="font-size:1.8rem;font-weight:900;color:#4ade80;letter-spacing:-1px;">0</div>
+                                <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(74,222,128,0.6);">Threats Today</div>
+                            </div>
+                            <div class="card-cta" style="align-self:flex-end;">Set Up Guardian →</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end page-content -->
+
+        <footer class="page-footer">
+            <p>© 2026 The Papyrus — Protecting your digital future with zero-trust, browser-native security.</p>
+        </footer>
+    </div><!-- end page-main -->
+
+    <!-- ===== BOTTOM NAV (Mobile) ===== -->
+    <nav class="bottom-nav" id="bottom-nav">
+        <a href="index.html" class="bottom-nav-item">
+            <span class="bn-icon">🏠</span>Home
+        </a>
+        <a href="services.html" class="bottom-nav-item active">
+            <span class="bn-icon">🛠️</span>Tools
+        </a>
+        <a href="quiz.html" class="bottom-nav-item">
+            <span class="bn-icon">🧠</span>Quiz
+        </a>
+        <a href="account.html" class="bottom-nav-item">
+            <span class="bn-icon">👤</span>Account
+        </a>
+        <button class="bottom-nav-item" onclick="window.toggleSidebar()">
+            <span class="bn-icon">☰</span>More
+        </button>
+    </nav>
+
+    <!-- ======= SIMULATOR MODAL ======= -->
+    <div id="service-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="close-modal" class="close-btn">&times;</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="transitions.js"></script>
+    <script src="script.js"></script>
+    <script src="email-guardian.js"></script>
+    <script type="module" src="auth.js"></script>
+</body>
+</html>
+
+</body>
+</html>
+m/firebasejs/10.7.1/firebase-firestore.js';
+        const firebaseConfig = { apiKey:"AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",authDomain:"ai-studio-applet-webapp-ed2b6.firebaseapp.com",projectId:"ai-studio-applet-webapp-ed2b6",storageBucket:"ai-studio-applet-webapp-ed2b6.firebasestorage.app",messagingSenderId:"343966893252",appId:"1:343966893252:web:1d15560bc9e2834d987591" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app); const db = getFirestore(app); const provider = new GoogleAuthProvider();
+        window.firebaseAuth=auth;window.firebaseDb=db;window.firebaseProvider=provider;
+        window.signInWithPopup=signInWithPopup;window.signOut=signOut;window.onAuthStateChanged=onAuthStateChanged;
+        window.collection=collection;window.addDoc=addDoc;window.getDocs=getDocs;
+
+        // Update sidebar sign-in btn if already logged in
+        onAuthStateChanged(auth, user => {
+            const btn = document.querySelector('.sidebar-sign-in-btn');
+            if (user && btn) {
+                btn.textContent = `👤 ${user.displayName || user.email.split('@')[0]}`;
+                btn.href = 'dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

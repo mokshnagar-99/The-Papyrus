@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Quiz — The Papyrus</title>
+    <meta name="description" content="Test your cybersecurity knowledge with The Papyrus Security Quiz — 15 questions covering phishing, encryption, passwords, and more.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-layout.css?v=1.2">
+    <link rel="stylesheet" href="transitions.css">
+    <style>
+        .quiz-wrap { max-width: 720px; margin: 0 auto; }
+        .quiz-header { text-align: center; margin-bottom: 2.5rem; }
+        .quiz-header h1 { font-family: 'Cinzel', serif; font-size: 2rem; color: #fff; margin-bottom: 0.5rem; }
+        .quiz-meta { display: flex; justify-content: center; gap: 1.5rem; margin-top: 1rem; flex-wrap: wrap; }
+        .quiz-meta-item { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25); padding: 0.4rem 1rem; border-radius: 100px; font-size: 0.82rem; color: #a5b4fc; font-weight: 700; }
+
+        .progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.07); border-radius: 3px; margin-bottom: 2rem; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #22d3ee); border-radius: 3px; transition: width 0.5s; }
+
+        .question-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 2rem; margin-bottom: 1.5rem; transition: all 0.3s; }
+        .question-number { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.3); margin-bottom: 0.75rem; }
+        .question-text { font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.5; margin-bottom: 1.5rem; }
+        .options-grid { display: flex; flex-direction: column; gap: 0.7rem; }
+        .option-btn { display: flex; align-items: center; gap: 0.9rem; padding: 1.1rem 1.4rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: rgba(255,255,255,0.8); font-size: 1.05rem; cursor: pointer; font-family: 'Outfit', sans-serif; text-align: left; transition: all 0.2s; }
+        .option-btn:hover:not(:disabled) { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.35); color: #fff; }
+        .option-btn.correct { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.4); color: #4ade80; }
+        .option-btn.wrong { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); color: #f87171; }
+        .option-btn:disabled { cursor: default; }
+        .option-letter { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+        .option-btn.correct .option-letter { background: rgba(74,222,128,0.2); border-color: rgba(74,222,128,0.5); color: #4ade80; }
+        .option-btn.wrong .option-letter { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); color: #f87171; }
+
+        .explanation-box { margin-top: 1rem; padding: 1rem; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 0.88rem; line-height: 1.6; display: none; }
+        .explanation-box strong { color: #a5b4fc; }
+
+        .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
+        .quiz-btn { padding: 0.85rem 2rem; border-radius: 12px; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.3s; border: none; }
+        .quiz-btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 4px 15px rgba(99,102,241,0.3); }
+        .quiz-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.5); }
+        .quiz-btn-secondary { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.6); }
+        .score-label { font-size: 0.9rem; color: rgba(255,255,255,0.4); font-weight: 700; }
+
+        /* Results Screen */
+        .results-screen { display: none; text-align: center; }
+        .results-screen.visible { display: block; }
+        .score-circle { width: 160px; height: 160px; border-radius: 50%; border: 6px solid rgba(99,102,241,0.3); display: flex; align-items: center; justify-content: center; flex-direction: column; margin: 1.5rem auto; position: relative; }
+        .score-circle::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; background: conic-gradient(#6366f1 var(--score-pct), transparent 0); }
+        .score-num { font-size: 2.5rem; font-weight: 800; color: #fff; position: relative; z-index: 1; }
+        .score-denom { font-size: 1rem; color: rgba(255,255,255,0.4); position: relative; z-index: 1; }
+        .grade-badge { display: inline-block; padding: 0.5rem 1.5rem; border-radius: 100px; font-weight: 800; font-size: 1.1rem; margin: 1rem 0; }
+        .cert-card { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(6,182,212,0.08)); border: 1px solid rgba(99,102,241,0.25); border-radius: 20px; padding: 2rem; margin: 1.5rem 0; }
+        .cert-title { font-family: 'Cinzel', serif; font-size: 1.3rem; color: #a5b4fc; margin-bottom: 0.5rem; }
+        .cert-subtitle { color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 1rem; }
+        .cert-name { font-family: 'Cinzel', serif; font-size: 1.8rem; color: #fff; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
+        .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.5rem; text-align: left; }
+        .review-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.85rem; }
+        .review-item.ri-correct { border-left: 3px solid #4ade80; }
+        .review-item.ri-wrong { border-left: 3px solid #f87171; }
+        @media(max-width:600px) { .review-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="page-orbs"><div class="page-orb page-orb-1"></div><div class="page-orb page-orb-2"></div></div>
+
+    <!-- ======= SIDEBAR ======= -->
+    <aside class="sidebar" id="sidebar">
+        <a href="index.html" class="sidebar-logo">
+            <img src="White AI logo.png" alt="The Papyrus">
+            <span>The Papyrus</span>
+        </a>
+        <div class="sidebar-section-label">Navigation</div>
+        <div class="sidebar-nav">
+            <a href="index.html" class="sidebar-link">
+                <span class="link-icon">🏠</span> Home
+            </a>
+            
+            <div class="sidebar-dropdown">
+                <button class="sidebar-link" onclick="this.parentElement.classList.toggle('open')" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> Tools<span class="link-badge">11</span></div>
+                    <span class="dropdown-arrow" style="transition:transform 0.2s;">▼</span>
+                </button>
+                <div class="sidebar-dropdown-menu">
+                    <a class="sidebar-sublink" onclick="navigateToTool('phishing')">🛡️ Phishing Scanner</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('ai_threat')">🤖 AI Threat Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('deepfake')">🎭 Deepfake Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('blockchain')">⛓️ File Verifier</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('vault')">🔒 Encryption Vault</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('dlp')">🚫 Data Leakage Prev</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('password')">🔐 Password Guardian</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('api_management')">🔑 Secure API Mgmt</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('fraud')">🕵️ Fraud Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('privacy_ai')">🧬 Privacy AI</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('breach_monitor')">🔍 Breach Monitor</a>
+                </div>
+            </div>
+            
+            <a href="quiz.html" class="sidebar-link active">
+                <span class="link-icon">🧠</span> Security Quiz
+            </a>
+            <a href="playbook.html" class="sidebar-link">
+                <span class="link-icon">📖</span> IR Playbook
+            </a>
+            <a href="account.html" class="sidebar-link">
+                <span class="link-icon">👤</span> Account
+            </a>
+            <a href="about.html" class="sidebar-link">
+                <span class="link-icon">ℹ️</span> About
+            </a>
+        </div>
+        <div class="sidebar-bottom">
+            <button class="gemini-status-btn" onclick="openGeminiSettings()" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;width:100%;padding:0.75rem;margin-bottom:0.6rem;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);border-radius:10px;color:#a5b4fc;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;transition:all 0.2s;">⚙️ AI Settings</button>
+            <a href="login.html" class="sidebar-sign-in-btn">🔑 Sign In / Sign Up</a>
+        </div>
+    </aside>
+
+    <div class="page-main">
+        <header class="page-topbar">
+            <div style="display:flex;align-items:center;gap:1.25rem;">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <div class="topbar-title-group">
+                    <span class="topbar-page-title">Security Quiz</span>
+                    <span class="topbar-page-sub">Test your cybersecurity knowledge</span>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button class="lang-toggle-btn" data-en="EN" data-hi="हिन्दी"><i>🌐</i> EN</button>
+                <div class="topbar-status"><div class="status-dot"></div>15 Questions Online</div>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="quiz-wrap">
+                <!-- Quiz Header -->
+                <div class="quiz-header">
+                    <div class="content-badge">Awareness Training</div>
+                    <h1>Cybersecurity Knowledge Quiz</h1>
+                    <p class="content-subtitle" style="text-align:center;margin:0 auto;">Test your understanding of phishing, encryption, passwords, social engineering, and modern threats.</p>
+                    <div class="quiz-meta">
+                        <span class="quiz-meta-item">⏱️ ~5 minutes</span>
+                        <span class="quiz-meta-item">🧠 15 Questions</span>
+                        <span class="quiz-meta-item">🏆 Certificate on completion</span>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="progress-track">
+                    <div class="progress-fill" id="quiz-progress" style="width:0%"></div>
+                </div>
+
+                <!-- Question Area -->
+                <div id="quiz-area">
+                    <div class="question-card" id="question-card">
+                        <div class="question-number" id="q-number">Question 1 of 15</div>
+                        <div class="question-text" id="q-text"></div>
+                        <div class="options-grid" id="q-options"></div>
+                        <div class="explanation-box" id="q-explanation"></div>
+                    </div>
+                    <div class="quiz-nav">
+                        <span class="score-label" id="score-label">Score: 0 / 0</span>
+                        <button class="quiz-btn quiz-btn-primary" id="next-btn" onclick="nextQuestion()" style="display:none;">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Results Screen -->
+                <div class="results-screen" id="results-screen">
+                    <div class="content-badge">Quiz Complete!</div>
+                    <h2 style="font-family:Cinzel,serif;font-size:1.8rem;color:#fff;margin:0.75rem 0;">Your Results</h2>
+                    <div class="score-circle" id="score-circle">
+                        <div class="score-num" id="final-score">0</div>
+                        <div class="score-denom">/ 15</div>
+                    </div>
+                    <div class="grade-badge" id="grade-badge"></div>
+                    <p id="grade-message" style="color:rgba(255,255,255,0.55);margin-bottom:1.5rem;"></p>
+
+                    <!-- Certificate -->
+                    <div class="cert-card" id="cert-card">
+                        <div class="cert-title">🏆 Certificate of Completion</div>
+                        <div class="cert-subtitle">This certifies that</div>
+                        <div class="cert-name" id="cert-name">Cybersecurity Enthusiast</div>
+                        <div class="cert-subtitle" style="margin-top:0.5rem;">has completed The Papyrus Security Awareness Quiz with a score of <strong id="cert-score" style="color:#a5b4fc;"></strong></div>
+                        <div style="margin-top:1rem;font-size:0.78rem;color:rgba(255,255,255,0.3);">Issued by The Papyrus Platform · <span id="cert-date"></span></div>
+                    </div>
+
+                    <div style="display:flex;gap:1rem;justify-content:center;margin:1.5rem 0;">
+                        <button class="quiz-btn quiz-btn-primary" onclick="restartQuiz()">🔄 Retake Quiz</button>
+                        <button class="quiz-btn quiz-btn-secondary" onclick="window.print()">🖨️ Print Certificate</button>
+                    </div>
+
+                    <div style="text-align:left;">
+                        <h3 style="color:#fff;font-size:1rem;margin-bottom:1rem;">📝 Question Review</h3>
+                        <div class="review-grid" id="review-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="page-footer"><p>© 2026 The Papyrus. Protecting your digital future.</p></footer>
+    </div>
+
+    <script src="transitions.js"></script>
+    <script src="script.js"></script>
+    <script>
+    const QUIZ_QUESTIONS = [
+        {
+            q: "What is phishing?",
+            opts: ["A technique to crack passwords using brute force", "A social engineering attack that tricks users into revealing sensitive information", "A type of malware that encrypts your files", "An attack that intercepts network traffic"],
+            correct: 1,
+            explain: "Phishing uses deceptive emails, messages, or websites to trick victims into providing credentials or personal data. It's the most common cyberattack method."
+        },
+        {
+            q: "Which of the following makes a password most secure?",
+            opts: ["Using your birthday with a capital letter", "A short word that's easy to remember", "A long passphrase with mixed characters and symbols", "Using the same strong password everywhere"],
+            correct: 2,
+            explain: "Length + complexity is key. A passphrase like 'Tr0pical$unset#Blue!' is far harder to crack than 'P@ssw0rd'. Never reuse passwords — a breach of one site exposes all others."
+        },
+        {
+            q: "What does AES-256 stand for?",
+            opts: ["Advanced Email Security, 256 rules", "Advanced Encryption Standard with a 256-bit key", "Automated Encryption System version 256", "Asymmetric Encryption Schema, 256-layer"],
+            correct: 1,
+            explain: "AES-256 (Advanced Encryption Standard) uses a 256-bit key — considered military-grade. It's used in The Papyrus File Encryption Vault and is virtually unbreakable with current technology."
+        },
+        {
+            q: "A colleague sends you an urgent email asking for login credentials. What should you do?",
+            opts: ["Respond immediately since it's urgent", "Call or physically verify with the colleague before acting", "Delete the email and ignore it", "Forward the email to IT without reporting it"],
+            correct: 1,
+            explain: "Verify through a separate channel (phone call, in-person). Urgency is a classic social engineering tactic designed to bypass critical thinking."
+        },
+        {
+            q: "What is a Man-in-the-Middle (MitM) attack?",
+            opts: ["When an attacker physically intercepts mail packages", "When an attacker secretly intercepts communication between two parties", "When a hacker uses your webcam without permission", "When software manipulates CPU calculations"],
+            correct: 1,
+            explain: "In a MitM attack, the attacker secretly relays and possibly alters communication between two parties. HTTPS and certificate verification protect against this."
+        },
+        {
+            q: "What does SHA-256 produce?",
+            opts: ["An encrypted copy of the file", "A 256-character password", "A fixed-length 64-character fingerprint (hash) of any data", "A compressed ZIP archive"],
+            correct: 2,
+            explain: "SHA-256 is a cryptographic hash function. Any input, regardless of size, produces a unique 256-bit (64 hex character) fingerprint. Even a single character change produces a completely different hash."
+        },
+        {
+            q: "Which is a sign that a website is using HTTPS correctly?",
+            opts: ["The URL starts with 'www'", "A padlock icon in your browser's address bar", "The website loads very quickly", "The background is green"],
+            correct: 1,
+            explain: "The padlock icon indicates a valid TLS/SSL certificate, meaning the connection is encrypted. However, even phishing sites can have HTTPS — always verify the domain name too."
+        },
+        {
+            q: "What is ransomware?",
+            opts: ["A tool for recovering deleted files", "Malware that demands payment to restore access to your encrypted files", "Software for tracking employee activity", "A type of network vulnerability scanner"],
+            correct: 1,
+            explain: "Ransomware encrypts your files and demands payment (usually cryptocurrency) for the decryption key. Famous examples include WannaCry and REvil. Regular backups are the best defense."
+        },
+        {
+            q: "What is two-factor authentication (2FA)?",
+            opts: ["Using two passwords for one account", "Logging in with two different devices simultaneously", "A second verification step beyond your password (e.g., SMS code, authenticator app)", "Sharing a login between two people"],
+            correct: 2,
+            explain: "2FA adds a layer of security. Even if a password is stolen, the attacker can't access the account without the second factor. Authenticator apps (TOTP) are more secure than SMS."
+        },
+        {
+            q: "What is the main risk of using public Wi-Fi without a VPN?",
+            opts: ["Your battery drains faster", "Attackers on the same network can intercept your unencrypted traffic", "Your device syncs files slower", "You can only browse some websites"],
+            correct: 1,
+            explain: "On open Wi-Fi, attackers can use packet sniffing or MitM attacks to read unencrypted traffic. A VPN encrypts your connection, protecting you even on untrusted networks."
+        },
+        {
+            q: "What is a zero-day vulnerability?",
+            opts: ["A bug that takes zero days to fix", "A vulnerability that has been publicly known for zero days (unknown to the vendor)", "A type of DDoS attack lasting less than a day", "An encryption method with no key"],
+            correct: 1,
+            explain: "A zero-day is a vulnerability unknown to the software vendor, meaning they have zero days to prepare a fix. Attackers exploit these before patches are released."
+        },
+        {
+            q: "Which password hashing algorithm is considered most secure for storing passwords?",
+            opts: ["MD5", "SHA-1", "bcrypt or Argon2", "Base64"],
+            correct: 2,
+            explain: "bcrypt and Argon2 are designed specifically for password hashing — they're intentionally slow and include salting, making brute-force and rainbow table attacks extremely difficult. MD5 and SHA-1 are cryptographically broken."
+        },
+        {
+            q: "What is social engineering?",
+            opts: ["Using algorithms to build social media platforms", "Manipulating people psychologically to reveal confidential information", "A method to speed up social media loads", "Encrypting data shared on social networks"],
+            correct: 1,
+            explain: "Social engineering exploits human psychology rather than technical vulnerabilities. Tactics include pretexting, baiting, quid pro quo, and phishing. The human is always the weakest link."
+        },
+        {
+            q: "What does GDPR primarily protect?",
+            opts: ["Government digital records", "The personal data and privacy rights of EU citizens", "Software code intellectual property", "Corporate financial transactions"],
+            correct: 1,
+            explain: "The General Data Protection Regulation (GDPR) gives EU citizens rights over their personal data — including the right to access, correct, and delete it. Non-compliance carries massive fines."
+        },
+        {
+            q: "What is the safest way to store sensitive files?",
+            opts: ["In a folder named 'Not Important'", "On a USB stick kept at home", "Encrypted with a strong key, backed up securely offline", "In a shared Google Drive folder"],
+            correct: 2,
+            explain: "Encryption ensures that even if your storage medium is stolen, the data is unreadable without the key. The Papyrus File Encryption Vault uses AES-256 for exactly this purpose."
+        }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let answered = [];
+
+    function loadQuestion() {
+        const q = QUIZ_QUESTIONS[currentQ];
+        document.getElementById('q-number').textContent = `Question ${currentQ + 1} of ${QUIZ_QUESTIONS.length}`;
+        document.getElementById('q-text').textContent = q.q;
+        document.getElementById('quiz-progress').style.width = `${(currentQ / QUIZ_QUESTIONS.length) * 100}%`;
+        document.getElementById('score-label').textContent = `Score: ${score} / ${currentQ}`;
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('q-explanation').style.display = 'none';
+
+        const opts = document.getElementById('q-options');
+        opts.innerHTML = '';
+        const letters = ['A', 'B', 'C', 'D'];
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
+            btn.onclick = () => selectOption(i, btn);
+            opts.appendChild(btn);
+        });
+    }
+
+    function selectOption(index, btn) {
+        const q = QUIZ_QUESTIONS[currentQ];
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.disabled = true);
+
+        const isCorrect = index === q.correct;
+        if (isCorrect) {
+            btn.classList.add('correct');
+            score++;
+        } else {
+            btn.classList.add('wrong');
+            allBtns[q.correct].classList.add('correct');
+        }
+        answered.push({ q: q.q, correct: isCorrect });
+
+        const exp = document.getElementById('q-explanation');
+        exp.innerHTML = `<strong>${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</strong> ${q.explain}`;
+        exp.style.display = 'block';
+        document.getElementById('score-label').textContent = `Score: ${score} / ${currentQ + 1}`;
+        document.getElementById('next-btn').style.display = 'inline-flex';
+        document.getElementById('next-btn').textContent = currentQ === QUIZ_QUESTIONS.length - 1 ? '🏆 See Results' : 'Next →';
+    }
+
+    function nextQuestion() {
+        currentQ++;
+        if (currentQ >= QUIZ_QUESTIONS.length) {
+            showResults();
+        } else {
+            loadQuestion();
+        }
+    }
+
+    function showResults() {
+        document.getElementById('quiz-area').style.display = 'none';
+        const rs = document.getElementById('results-screen');
+        rs.classList.add('visible');
+        document.getElementById('quiz-progress').style.width = '100%';
+
+        const pct = Math.round((score / QUIZ_QUESTIONS.length) * 100);
+        document.getElementById('final-score').textContent = score;
+        document.getElementById('score-circle').style.setProperty('--score-pct', `${pct}%`);
+
+        let grade, color, message;
+        if (pct >= 90) { grade = 'Expert 🏆'; color = '#4ade80'; message = 'Outstanding! You have expert-level cybersecurity knowledge.'; }
+        else if (pct >= 75) { grade = 'Proficient 🥈'; color = '#a5b4fc'; message = 'Great work! You have solid security fundamentals.'; }
+        else if (pct >= 55) { grade = 'Developing 🥉'; color = '#fbbf24'; message = 'Good effort! Review the explanations to strengthen your knowledge.'; }
+        else { grade = 'Beginner 📚'; color = '#f87171'; message = 'Keep learning! Every expert started here. Retake the quiz after reviewing the explanations.'; }
+
+        const badge = document.getElementById('grade-badge');
+        badge.textContent = grade;
+        badge.style.cssText = `background: rgba(${color === '#4ade80' ? '74,222,128' : color === '#a5b4fc' ? '99,102,241' : color === '#fbbf24' ? '251,191,36' : '239,68,68'},0.15); color: ${color}; border: 1px solid ${color}4D; padding: 0.5rem 1.5rem; border-radius: 100px; font-weight: 800; font-size: 1.1rem; margin: 1rem 0; display: inline-block;`;
+        document.getElementById('grade-message').textContent = message;
+
+        // Certificate
+        document.getElementById('cert-score').textContent = `${score}/15 (${pct}%)`;
+        document.getElementById('cert-date').textContent = new Date().toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'});
+
+        // Review grid
+        const grid = document.getElementById('review-grid');
+        grid.innerHTML = answered.map((a, i) => `
+            <div class="review-item ${a.correct ? 'ri-correct' : 'ri-wrong'}">
+                <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:0.2rem;">Q${i+1} ${a.correct ? '✅' : '❌'}</div>
+                <div style="color:rgba(255,255,255,0.75);font-size:0.85rem;">${a.q.substring(0,60)}${a.q.length > 60 ? '...' : ''}</div>
+            </div>
+        `).join('');
+
+        // Update certificate name if logged in
+        if(window.firebaseAuth?.currentUser) {
+            const name = window.firebaseAuth.currentUser.displayName || window.firebaseAuth.currentUser.email?.split('@')[0] || 'User';
+            document.getElementById('cert-name').textContent = name;
+        }
+    }
+
+    function restartQuiz() {
+        currentQ = 0; score = 0; answered = [];
+        document.getElementById('results-screen').classList.remove('visible');
+        document.getElementById('quiz-area').style.display = 'block';
+        loadQuestion();
+    }
+
+    // Start quiz
+    loadQuestion();
+    </script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        const firebaseConfig = { apiKey:"AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",authDomain:"ai-studio-applet-webapp-ed2b6.firebaseapp.com",projectId:"ai-studio-applet-webapp-ed2b6",storageBucket:"ai-studio-applet-webapp-ed2b6.firebasestorage.app",messagingSenderId:"343966893252",appId:"1:343966893252:web:1d15560bc9e2834d987591" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        window.firebaseAuth = auth;
+        onAuthStateChanged(auth, user => {
+            const btn = document.querySelector('.sidebar-sign-in-btn');
+            if (user && btn) { btn.textContent = `👤 ${user.displayName || user.email.split('@')[0]}`; btn.href = 'dashboard.html'; }
+            if (user) { document.getElementById('cert-name').textContent = user.displayName || user.email?.split('@')[0] || 'Cybersecurity Enthusiast'; }
+        });
+    </script>
+</body>
+</html>

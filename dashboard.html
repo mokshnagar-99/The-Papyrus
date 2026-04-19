@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — The Papyrus</title>
+    <meta name="description" content="Your personal security dashboard on The Papyrus. Access all AI-powered tools, view security stats, and protect your digital assets.">
+    <link rel="stylesheet" href="shared-layout.css?v=1.3">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="transitions.css">
+    <style>
+        /* ======= DASHBOARD STYLES ======= */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* NOTE: Layout and Sidebar styles are now in shared-layout.css */
+        
+        /* Animated orbs */
+        .dash-orbs {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .dash-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.1;
+        }
+        .dash-orb-1 { width:500px;height:500px;background:radial-gradient(circle,#6366f1,#312e81);top:-100px;left:-100px;animation:dashOrb 20s infinite alternate ease-in-out; }
+        .dash-orb-2 { width:400px;height:400px;background:radial-gradient(circle,#0ea5e9,#075985);bottom:-100px;right:-100px;animation:dashOrb 16s infinite alternate ease-in-out reverse; }
+        @keyframes dashOrb { 0%{transform:translate(0,0)}100%{transform:translate(50px,50px)} }
+
+        /* CONTENT */
+        .dash-content { padding: 2rem; flex: 1; }
+
+        /* WELCOME BANNER */
+        .welcome-banner {
+            background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(34,211,238,0.06), rgba(99,102,241,0.12));
+            background-size: 200% 200%;
+            animation: shiftGradient 10s ease infinite;
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 20px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(99,102,241,0.08);
+        }
+        @keyframes shiftGradient { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .banner-glow {
+            position: absolute;
+            top: -30px; right: 100px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(99,102,241,0.2), transparent 65%);
+            pointer-events: none;
+        }
+        .banner-left { position: relative; z-index: 1; }
+        .banner-greeting { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; color: #a5b4fc; font-weight: 700; margin-bottom: 0.5rem; }
+        .banner-name { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; color: #fff; margin-bottom: 0.4rem; }
+        .banner-sub { color: rgba(255,255,255,0.55); font-size: 0.9rem; }
+        .banner-right { display: flex; gap: 1rem; flex-wrap: wrap; flex-shrink: 0; position: relative; z-index: 1; }
+        .banner-stat {
+            text-align: center;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 0.9rem 1.4rem;
+        }
+        .bstat-num { display: block; font-size: 1.6rem; font-weight: 800; color: #fff; }
+        .bstat-label { font-size: 0.72rem; color: rgba(255,255,255,0.4); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* STATS ROW */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card:hover { 
+            background: rgba(255,255,255,0.06); 
+            border-color: rgba(99,102,241,0.25); 
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 15px rgba(99,102,241,0.15);
+        }
+        .stat-icon-wrap {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0;
+        }
+        .si-purple { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); }
+        .si-cyan   { background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.25); }
+        .si-green  { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25); }
+        .si-pink   { background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.25); }
+        .stat-info { flex: 1; }
+        .stat-val { font-size: 1.5rem; font-weight: 800; color: #fff; display: block; margin-bottom: 0.2rem; }
+        .stat-lbl { font-size: 0.78rem; color: rgba(255,255,255,0.45); font-weight: 600; }
+
+        /* TOOLS SECTION */
+        .section-heading { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+        .section-heading::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .tool-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 1.75rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tc-purple::before { background: linear-gradient(90deg, transparent, #6366f1, transparent); }
+        .tc-cyan::before   { background: linear-gradient(90deg, transparent, #22d3ee, transparent); }
+        .tc-green::before  { background: linear-gradient(90deg, transparent, #4ade80, transparent); }
+        .tc-pink::before   { background: linear-gradient(90deg, transparent, #ec4899, transparent); }
+        .tool-card:hover { 
+            background: rgba(255,255,255,0.05); 
+            transform: translateY(-6px); 
+            border-color: rgba(99,102,241,0.25); 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 20px rgba(99,102,241,0.15);
+        }
+        .tool-card:hover::before { opacity: 1; }
+        .tool-card:hover .tc-arrow { transform: translateX(4px); }
+        .tool-emoji-big { font-size: 2.2rem; }
+        .tool-card-name { font-size: 1rem; font-weight: 700; color: #fff; font-family: 'Outfit', sans-serif; }
+        .tool-card-desc { font-size: 0.85rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+        .tool-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.06); }
+        .tool-tag {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3px;
+            padding: 0.2rem 0.7rem;
+            border-radius: 100px;
+        }
+        .tt-purple { color: #a5b4fc; background: rgba(99,102,241,0.15); }
+        .tt-cyan   { color: #67e8f9; background: rgba(34,211,238,0.12); }
+        .tt-green  { color: #86efac; background: rgba(74,222,128,0.12); }
+        .tt-pink   { color: #f9a8d4; background: rgba(236,72,153,0.12); }
+        .tc-arrow { color: rgba(255,255,255,0.3); font-size: 1rem; transition: transform 0.2s; }
+
+        /* BOTTOM GRID */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        .dash-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 18px;
+            padding: 1.5rem;
+        }
+        .card-title { font-size: 0.9rem; font-weight: 700; color: rgba(255,255,255,0.7); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        /* Security Score Donut */
+        .score-donut { display: flex; align-items: center; gap: 1.5rem; }
+        .donut-svg { width: 90px; height: 90px; flex-shrink: 0; }
+        .donut-track { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 10; }
+        .donut-progress { fill: none; stroke: url(#donutGrad); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 220; stroke-dashoffset: 22; transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset 1.5s ease; filter: drop-shadow(0 0 6px rgba(34,211,238,0.5)); animation: donutPulse 3s infinite alternate; }
+        @keyframes donutPulse { 0%{filter: drop-shadow(0 0 4px rgba(34,211,238,0.3))} 100%{filter: drop-shadow(0 0 12px rgba(34,211,238,0.8))} }
+        .donut-info { flex: 1; }
+        .donut-score { font-size: 2.5rem; font-weight: 800; color: #fff; line-height: 1; }
+        .donut-label { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-bottom: 0.7rem; }
+        .donut-checks { display: flex; flex-direction: column; gap: 0.4rem; }
+        .donut-check { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: rgba(255,255,255,0.6); }
+        .check-icon { color: #4ade80; font-size: 0.9rem; }
+
+        /* Activity Feed */
+        .activity-feed { display: flex; flex-direction: column; gap: 0.75rem; }
+        .activity-item { display: flex; align-items: flex-start; gap: 0.8rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .act-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+        .act-body { flex: 1; }
+        .act-title { font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.8); margin-bottom: 0.15rem; }
+        .act-time { font-size: 0.75rem; color: rgba(255,255,255,0.3); }
+        .act-badge { font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 100px; margin-left: 0.5rem; }
+        .ab-safe { background: rgba(74,222,128,0.15); color: #4ade80; }
+        .ab-warn { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .ab-info { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+
+        /* Quick Tips */
+        .tips-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            padding: 0.85rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+        }
+        .tip-icon { font-size: 1.2rem; flex-shrink: 0; }
+        .tip-text { font-size: 0.85rem; color: rgba(255,255,255,0.6); line-height: 1.5; }
+
+        /* =========== AUTH GUARD =========== */
+        .auth-loading {
+            position: fixed; inset: 0;
+            background: #030308;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem;
+            z-index: 9999;
+            /* Always visible even during body fade-in transition */
+            opacity: 1 !important;
+        }
+        .auth-loading-logo { height: 60px; animation: loadPulse 1.5s ease-in-out infinite; }
+        .auth-loading-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(99,102,241,0.2);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .auth-loading-text { color: rgba(255,255,255,0.4); font-size: 0.9rem; }
+        @keyframes spin { to{ transform:rotate(360deg); } }
+        @keyframes loadPulse { 0%,100%{opacity:0.8}50%{opacity:1} }
+
+        /* =========== RESPONSIVE =========== */
+        @media (max-width: 1024px) {
+            .bottom-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .dash-main { margin-left: 0; }
+            .hamburger { display: block; }
+            .welcome-banner { flex-direction: column; align-items: flex-start; }
+            .banner-right { width: 100%; justify-content: space-around; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- AUTH LOADING SCREEN -->
+    <div class="auth-loading" id="auth-loading">
+        <img src="White AI logo.png" alt="The Papyrus" class="auth-loading-logo">
+        <div class="auth-loading-spinner"></div>
+        <p class="auth-loading-text">Verifying your session...</p>
+    </div>
+
+    <!-- Ambient Orbs -->
+    <div class="dash-orbs">
+        <div class="dash-orb dash-orb-1"></div>
+        <div class="dash-orb dash-orb-2"></div>
+    </div>    <!-- =========== SIDEBAR =========== -->
+    <aside class="sidebar" id="sidebar">
+        <a href="index.html" class="sidebar-logo">
+            <img src="White AI logo.png" alt="The Papyrus">
+            <span>The Papyrus</span>
+        </a>
+
+        <div class="sidebar-section-label">Navigation</div>
+        <div class="sidebar-nav">
+            <a href="index.html" class="sidebar-link">
+                <span class="link-icon">🏠</span> Home
+            </a>
+            
+            <div class="sidebar-dropdown">
+                <button class="sidebar-link" onclick="this.parentElement.classList.toggle('open')" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> Tools<span class="link-badge">11</span></div>
+                    <span class="dropdown-arrow" style="transition:transform 0.2s;">▼</span>
+                </button>
+                <div class="sidebar-dropdown-menu">
+                    <a class="sidebar-sublink" onclick="navigateToTool('phishing')">🛡️ Phishing Scanner</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('ai_threat')">🤖 AI Threat Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('deepfake')">🎭 Deepfake Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('blockchain')">⛓️ File Verifier</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('vault')">🔒 Encryption Vault</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('dlp')">🚫 Data Leakage Prev</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('password')">🔐 Password Guardian</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('api_management')">🔑 Secure API Mgmt</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('fraud')">🕵️ Fraud Detection</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('privacy_ai')">🧬 Privacy AI</a>
+                    <a class="sidebar-sublink" onclick="navigateToTool('breach_monitor')">🔍 Breach Monitor</a>
+                </div>
+            </div>
+            
+            <a href="quiz.html" class="sidebar-link">
+                <span class="link-icon">🧠</span> Security Quiz
+            </a>
+            <a href="playbook.html" class="sidebar-link">
+                <span class="link-icon">📖</span> IR Playbook
+            </a>
+            <a href="account.html" class="sidebar-link">
+                <span class="link-icon">👤</span> Account
+            </a>
+            <a href="about.html" class="sidebar-link">
+                <span class="link-icon">ℹ️</span> About
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <button class="gemini-status-btn" onclick="openGeminiSettings()"
+                style="display:flex;align-items:center;justify-content:center;gap:0.5rem;
+                width:100%;padding:0.75rem;margin-bottom:0.75rem;
+                background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);
+                border-radius:10px;color:#a5b4fc;font-size:0.85rem;font-weight:700;
+                cursor:pointer;font-family:Outfit,sans-serif;transition:all 0.2s;">
+                ⚙️ AI Settings
+            </button>
+            <div class="user-pill" id="user-pill" onclick="window.location.href='account.html'" title="Account Settings">
+                <div class="user-avatar" id="user-avatar-sidebar">?</div>
+                <div class="user-info">
+                    <div class="user-name" id="sidebar-user-name">Loading...</div>
+                    <div class="user-email" id="sidebar-user-email">...</div>
+                </div>
+                <button class="btn-signout" onclick="event.stopPropagation(); handleSignOut();" title="Sign Out">⏻</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- =========== MAIN CONTENT =========== -->
+    <div class="page-main">
+
+        <header class="page-topbar">
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
+                <div class="topbar-title-group">
+                    <span class="topbar-page-title" id="topbar-greeting">Dashboard</span>
+                    <span class="topbar-page-sub" id="topbar-date"></span>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button class="lang-toggle-btn" data-en="EN" data-hi="हिन्दी"><i>🌐</i> EN</button>
+                <div class="topbar-status">
+                    <div class="status-dot"></div>
+                    All Systems Online
+                </div>
+            </div>
+        </header>
+
+
+        <!-- PAGE CONTENT -->
+        <div class="dash-content">
+
+            <!-- WELCOME BANNER -->
+            <div class="welcome-banner">
+                <div class="banner-glow"></div>
+                <div class="banner-left">
+                    <div class="banner-greeting">👋 Welcome back</div>
+                    <div class="banner-name" id="banner-name">Loading...</div>
+                    <div class="banner-sub">Your security command center is fully operational. All tools are ready.</div>
+                </div>
+                <div class="banner-right">
+                    <div class="banner-stat">
+                        <span class="bstat-num">11</span>
+                        <span class="bstat-label">Tools Active</span>
+                    </div>
+                    <div class="banner-stat">
+                        <span class="bstat-num">98</span>
+                        <span class="bstat-label">Security Score</span>
+                    </div>
+                    <div class="banner-stat">
+                        <span class="bstat-num">0</span>
+                        <span class="bstat-label">Threats Found</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATS ROW -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon-wrap si-purple">🛡️</div>
+                    <div class="stat-info">
+                        <span class="stat-val">Live</span>
+                        <span class="stat-lbl">Phishing Shield</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrap si-cyan">🔐</div>
+                    <div class="stat-info">
+                        <span class="stat-val">Ready</span>
+                        <span class="stat-lbl">Password Guardian</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrap si-green">⛓️</div>
+                    <div class="stat-info">
+                        <span class="stat-val">Active</span>
+                        <span class="stat-lbl">Blockchain Verifier</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrap si-pink">🔒</div>
+                    <div class="stat-info">
+                        <span class="stat-val">Online</span>
+                        <span class="stat-lbl">Encryption Vault</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SERVICES -->
+            <div class="section-heading">🛠️ Services</div>
+            <div class="tools-grid">
+                <a href="services.html" class="tool-card tc-purple" onclick="event.preventDefault(); sessionStorage.setItem('openTool','phishing'); location.href='services.html';">
+                    <div class="tool-emoji-big">🛡️</div>
+                    <div class="tool-card-name">Phishing Email Scanner</div>
+                    <div class="tool-card-desc">Paste any email or message to detect phishing attempts, urgency triggers, and social engineering in real time.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-purple">NLP · AI · Instant</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+                <a href="services.html" class="tool-card tc-cyan" onclick="event.preventDefault(); sessionStorage.setItem('openTool','password'); location.href='services.html';">
+                    <div class="tool-emoji-big">🔐</div>
+                    <div class="tool-card-name">Password Guardian</div>
+                    <div class="tool-card-desc">Live entropy analysis with complexity scoring, strength feedback, and secure password generation.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-cyan">Entropy · Real-time</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+                <a href="services.html" class="tool-card tc-green" onclick="event.preventDefault(); sessionStorage.setItem('openTool','blockchain'); location.href='services.html';">
+                    <div class="tool-emoji-big">⛓️</div>
+                    <div class="tool-card-name">Blockchain File Verifier</div>
+                    <div class="tool-card-desc">Drop any file to generate its SHA-256 hash. Prove document authenticity and detect tampering.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-green">SHA-256 · Blockchain</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+                <a href="services.html" class="tool-card tc-pink" onclick="event.preventDefault(); sessionStorage.setItem('openTool','vault'); location.href='services.html';">
+                    <div class="tool-emoji-big">🔒</div>
+                    <div class="tool-card-name">File Encryption Vault</div>
+                    <div class="tool-card-desc">Encrypt and decrypt files with AES-256 using your own password. Zero bytes sent to any server.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-pink">AES-256 · Offline</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+                <a href="services.html" class="tool-card tc-purple" onclick="event.preventDefault(); sessionStorage.setItem('openTool','ai_threat'); location.href='services.html';">
+                    <div class="tool-emoji-big">🤖</div>
+                    <div class="tool-card-name">AI Threat Detection</div>
+                    <div class="tool-card-desc">Real-time monitoring of unusual behavior using ML models trained on known malicious patterns.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-purple">ML · Behavioral</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+                <a href="services.html" class="tool-card tc-cyan" onclick="event.preventDefault(); sessionStorage.setItem('openTool','deepfake'); location.href='services.html';">
+                    <div class="tool-emoji-big">🎭</div>
+                    <div class="tool-card-name">Deepfake Detection</div>
+                    <div class="tool-card-desc">AI models that detect manipulated audio and video content using neural network classification.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-cyan">CNN · Media</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+                <a href="services.html" class="tool-card tc-green" onclick="event.preventDefault(); sessionStorage.setItem('openTool','dlp'); location.href='services.html';">
+                    <div class="tool-emoji-big">🚫</div>
+                    <div class="tool-card-name">Data Leakage Prevention</div>
+                    <div class="tool-card-desc">Monitoring and prevention of unauthorized data sharing with content-aware policies.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-green">DLP · Monitor</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+                <a href="services.html" class="tool-card tc-pink" onclick="event.preventDefault(); sessionStorage.setItem('openTool','api_management'); location.href='services.html';">
+                    <div class="tool-emoji-big">🔑</div>
+                    <div class="tool-card-name">Secure API Management</div>
+                    <div class="tool-card-desc">API key storage, rotation scheduling, and anomaly detection for developers.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-pink">Keys · Rotation</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+                <a href="services.html" class="tool-card tc-purple" onclick="event.preventDefault(); sessionStorage.setItem('openTool','fraud'); location.href='services.html';">
+                    <div class="tool-emoji-big">🕵️</div>
+                    <div class="tool-card-name">Fraud Detection</div>
+                    <div class="tool-card-desc">ML models for identifying suspicious transaction patterns and account takeover attempts.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-purple">Transactions · ML</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+                <a href="services.html" class="tool-card tc-cyan" onclick="event.preventDefault(); sessionStorage.setItem('openTool','privacy_ai'); location.href='services.html';">
+                    <div class="tool-emoji-big">🧬</div>
+                    <div class="tool-card-name">Privacy-Preserving AI</div>
+                    <div class="tool-card-desc">Federated learning and differential privacy techniques for secure model training.</div>
+                    <div class="tool-card-footer">
+                        <span class="tool-tag tt-cyan">Federated · Privacy</span>
+                        <span class="tc-arrow">→</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- BOTTOM GRID -->
+            <div class="bottom-grid">
+                <!-- Security Score -->
+                <div class="dash-card">
+                    <div class="card-title">🎯 Security Score</div>
+                    <div class="score-donut">
+                        <svg class="donut-svg" viewBox="0 0 90 90">
+                            <defs>
+                                <linearGradient id="donutGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#6366f1"/>
+                                    <stop offset="100%" stop-color="#22d3ee"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="donut-track" cx="45" cy="45" r="35"/>
+                            <circle class="donut-progress" cx="45" cy="45" r="35"/>
+                        </svg>
+                        <div class="donut-info">
+                            <div class="donut-score">98</div>
+                            <div class="donut-label">Excellent Protection</div>
+                            <div class="donut-checks">
+                                <div class="donut-check"><span class="check-icon">✓</span> Phishing protection active</div>
+                                <div class="donut-check"><span class="check-icon">✓</span> File encryption ready</div>
+                                <div class="donut-check"><span class="check-icon">✓</span> Blockchain verifier online</div>
+                                <div class="donut-check"><span class="check-icon">✓</span> Password guardian active</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="dash-card">
+                    <div class="card-title">📋 Recent Activity</div>
+                    <div class="activity-feed" id="activity-feed">
+                        <div class="activity-item">
+                            <div class="act-icon si-purple">🛡️</div>
+                            <div class="act-body">
+                                <div class="act-title">Phishing Scanner ready <span class="act-badge ab-safe">Safe</span></div>
+                                <div class="act-time">System initialized</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="act-icon si-cyan">🔐</div>
+                            <div class="act-body">
+                                <div class="act-title">Password Guardian loaded <span class="act-badge ab-info">Active</span></div>
+                                <div class="act-time">System initialized</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="act-icon si-green">⛓️</div>
+                            <div class="act-body">
+                                <div class="act-title">Blockchain Verifier online <span class="act-badge ab-safe">Online</span></div>
+                                <div class="act-time">System initialized</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="act-icon si-pink">🔒</div>
+                            <div class="act-body">
+                                <div class="act-title">Encryption Vault ready <span class="act-badge ab-info">Ready</span></div>
+                                <div class="act-time">System initialized</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Tips -->
+                <div class="dash-card">
+                    <div class="card-title">💡 Security Tips</div>
+                    <div class="tips-list">
+                        <div class="tip-item">
+                            <div class="tip-icon">🧩</div>
+                            <div class="tip-text">Use a unique password for every account. The Password Guardian can test yours right now.</div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">📧</div>
+                            <div class="tip-text">Received a suspicious email? Paste it into our Phishing Scanner before clicking any links.</div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">📁</div>
+                            <div class="tip-text">Before sharing a sensitive file, encrypt it with the Vault tool. Share only the password separately.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About Platform -->
+                <div class="dash-card">
+                    <div class="card-title">ℹ️ About The Papyrus</div>
+                    <div class="tips-list">
+                        <div class="tip-item">
+                            <div class="tip-icon">🔒</div>
+                            <div class="tip-text"><strong style="color:#fff">100% Private:</strong> All processing happens in your browser. No data is ever uploaded or stored.</div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">🌐</div>
+                            <div class="tip-text"><strong style="color:#fff">Bilingual:</strong> Full English &amp; Hindi support. Built for India's 600M+ Hindi speakers.</div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">🆓</div>
+                            <div class="tip-text"><strong style="color:#fff">Always Free:</strong> All tools are free. No subscriptions, no credit cards, ever.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end dash-content -->
+    </div><!-- end dash-main -->
+
+    <!-- Firebase Auth Guard -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",
+            authDomain: "ai-studio-applet-webapp-ed2b6.firebaseapp.com",
+            projectId: "ai-studio-applet-webapp-ed2b6",
+            storageBucket: "ai-studio-applet-webapp-ed2b6.firebasestorage.app",
+            messagingSenderId: "343966893252",
+            appId: "1:343966893252:web:1d15560bc9e2834d987591"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, user => {
+            const loader = document.getElementById('auth-loading');
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Hide loader
+            loader.style.display = 'none';
+
+            // Populate user info
+            const name = user.displayName || user.email.split('@')[0] || 'User';
+            const email = user.email;
+            const avatarInitial = name.charAt(0).toUpperCase();
+
+            document.getElementById('banner-name').textContent = `Hello, ${name}! 👋`;
+            document.getElementById('sidebar-user-name').textContent = name;
+            document.getElementById('sidebar-user-email').textContent = email;
+            document.getElementById('topbar-greeting').textContent = `Welcome, ${name.split(' ')[0]}`;
+
+            // Avatar: photo or initial
+            const avatarEl = document.getElementById('user-avatar-sidebar');
+            if (user.photoURL) {
+                avatarEl.innerHTML = `<img src="${user.photoURL}" alt="${name}">`;
+            } else {
+                avatarEl.textContent = avatarInitial;
+            }
+
+            // Add login activity
+            const feed = document.getElementById('activity-feed');
+            const loginItem = document.createElement('div');
+            loginItem.className = 'activity-item';
+            loginItem.innerHTML = `
+                <div class="act-icon si-purple">👤</div>
+                <div class="act-body">
+                    <div class="act-title">Signed in as ${name} <span class="act-badge ab-safe">Auth</span></div>
+                    <div class="act-time">Just now</div>
+                </div>`;
+            feed.insertBefore(loginItem, feed.firstChild);
+
+            window._auth = auth;
+            window._signOut = signOut;
+        });
+    </script>
+
+    <script>
+        // Topbar date
+        const now = new Date();
+        document.getElementById('topbar-date').textContent = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+        function handleSignOut() {
+            if (window._auth && window._signOut) {
+                window._signOut(window._auth).then(() => window.location.href = 'index.html');
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+
+        function goToTool(tool) {
+            sessionStorage.setItem('openTool', tool);
+        }
+
+        window.handleSignOut = handleSignOut;
+        window.toggleSidebar = toggleSidebar;
+        window.goToTool = goToTool;
+    </script>
+    <script src="script.js"></script>
+    <script src="transitions.js"></script>
+</body>
+</html>

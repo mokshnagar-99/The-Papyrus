@@ -1,0 +1,24 @@
+-Hero Section (Main Headline + Tagline)
+
+Papyrus — Protecting What Matters in the Digital Age
+
+Your data is your most valuable asset. Papyrus is a next-generation digital asset protection platform designed to secure your files, credentials, and online identity with intelligent, real-time defense. Built with advanced AI and modern security architecture, Papyrus ensures your digital world stays private, protected, and always within your control.
+
+-Subheading (Value Proposition)
+
+From personal files to enterprise-level data, Papyrus delivers proactive security, seamless access control, and instant threat detection—all in one unified platform.
+
+-Core Description (Overview Section)
+
+In today’s connected world, digital threats are more sophisticated than ever. Papyrus rises to this challenge by combining Artificial Intelligence, encryption technologies, and behavioral analytics to provide a comprehensive security ecosystem.
+
+Whether you're an individual safeguarding personal information or an organization managing sensitive assets, Papyrus offers a scalable, privacy-first solution that adapts to your needs. Our platform continuously monitors activity, detects anomalies, and responds to potential risks before they become breaches.
+
+
+-Trust Statement
+
+At Papyrus, security isn’t just a feature—it’s the foundation. We are committed to building a safer digital environment where users can operate with confidence, knowing their assets are protected by cutting-edge technology.
+
+-Closing Line (CTA Style)
+
+Secure your digital future today with Papyrus.
