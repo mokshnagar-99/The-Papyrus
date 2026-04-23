@@ -935,10 +935,11 @@ window.encryptVaultFile = async function() {
                 const downloadUrl = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = downloadUrl;
-                a.download = "locked_file.papyrus";
+                a.download = file.name + ".papyrus";
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
+                URL.revokeObjectURL(downloadUrl);
                 
                 results.style.display = 'block';
                 results.innerHTML = `
