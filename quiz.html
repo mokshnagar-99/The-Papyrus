@@ -404,17 +404,20 @@
     // Start quiz
     loadQuestion();
     </script>
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        const firebaseConfig = { apiKey:"AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",authDomain:"ai-studio-applet-webapp-ed2b6.firebaseapp.com",projectId:"ai-studio-applet-webapp-ed2b6",storageBucket:"ai-studio-applet-webapp-ed2b6.firebasestorage.app",messagingSenderId:"343966893252",appId:"1:343966893252:web:1d15560bc9e2834d987591" };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        window.firebaseAuth = auth;
-        onAuthStateChanged(auth, user => {
-            const btn = document.querySelector('.sidebar-sign-in-btn');
-            if (user && btn) { btn.textContent = `👤 ${user.displayName || user.email.split('@')[0]}`; btn.href = 'dashboard.html'; }
-            if (user) { document.getElementById('cert-name').textContent = user.displayName || user.email?.split('@')[0] || 'Cybersecurity Enthusiast'; }
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initGoogleAuth((user) => {
+                const btn = document.querySelector('.sidebar-sign-in-btn');
+                if (user && btn) {
+                    btn.textContent = `👤 ${user.name || user.email.split('@')[0]}`;
+                    btn.href = 'dashboard.html';
+                }
+                if (user) {
+                    document.getElementById('cert-name').textContent = user.name || user.email?.split('@')[0] || 'Cybersecurity Enthusiast';
+                }
+            });
         });
     </script>
 </body>

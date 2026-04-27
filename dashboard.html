@@ -616,77 +616,51 @@
         </div><!-- end dash-content -->
     </div><!-- end dash-main -->
 
-    <!-- Firebase Auth Guard -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",
-            authDomain: "ai-studio-applet-webapp-ed2b6.firebaseapp.com",
-            projectId: "ai-studio-applet-webapp-ed2b6",
-            storageBucket: "ai-studio-applet-webapp-ed2b6.firebasestorage.app",
-            messagingSenderId: "343966893252",
-            appId: "1:343966893252:web:1d15560bc9e2834d987591"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-
-        onAuthStateChanged(auth, user => {
-            const loader = document.getElementById('auth-loading');
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Hide loader
-            loader.style.display = 'none';
-
-            // Populate user info
-            const name = user.displayName || user.email.split('@')[0] || 'User';
-            const email = user.email;
-            const avatarInitial = name.charAt(0).toUpperCase();
-
-            document.getElementById('banner-name').textContent = `Hello, ${name}! 👋`;
-            document.getElementById('sidebar-user-name').textContent = name;
-            document.getElementById('sidebar-user-email').textContent = email;
-            document.getElementById('topbar-greeting').textContent = `Welcome, ${name.split(' ')[0]}`;
-
-            // Avatar: photo or initial
-            const avatarEl = document.getElementById('user-avatar-sidebar');
-            if (user.photoURL) {
-                avatarEl.innerHTML = `<img src="${user.photoURL}" alt="${name}">`;
-            } else {
-                avatarEl.textContent = avatarInitial;
-            }
-
-            // Add login activity
-            const feed = document.getElementById('activity-feed');
-            const loginItem = document.createElement('div');
-            loginItem.className = 'activity-item';
-            loginItem.innerHTML = `
-                <div class="act-icon si-purple">👤</div>
-                <div class="act-body">
-                    <div class="act-title">Signed in as ${name} <span class="act-badge ab-safe">Auth</span></div>
-                    <div class="act-time">Just now</div>
-                </div>`;
-            feed.insertBefore(loginItem, feed.firstChild);
-
-            window._auth = auth;
-            window._signOut = signOut;
-        });
-    </script>
-
+    <!-- Auth Guard -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth.js"></script>
     <script>
-        // Topbar date
-        const now = new Date();
-        document.getElementById('topbar-date').textContent = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        document.addEventListener('DOMContentLoaded', () => {
+            initGoogleAuth((user) => {
+                const loader = document.getElementById('auth-loading');
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-        function handleSignOut() {
-            if (window._auth && window._signOut) {
-                window._signOut(window._auth).then(() => window.location.href = 'index.html');
-            }
+                loader.style.display = 'none';
+
+                const name = user.name || user.email.split('@')[0] || 'User';
+                const email = user.email;
+
+                document.getElementById('banner-name').textContent = `Hello, ${name}! 👋`;
+                document.getElementById('sidebar-user-name').textContent = name;
+                document.getElementById('sidebar-user-email').textContent = email;
+                document.getElementById('topbar-greeting').textContent = `Welcome, ${name.split(' ')[0]}`;
+
+                const avatarEl = document.getElementById('user-avatar-sidebar');
+                if (user.picture) {
+                    avatarEl.innerHTML = `<img src="${user.picture}" alt="${name}">`;
+                } else {
+                    avatarEl.textContent = name.charAt(0).toUpperCase();
+                }
+
+                const feed = document.getElementById('activity-feed');
+                const loginItem = document.createElement('div');
+                loginItem.className = 'activity-item';
+                loginItem.innerHTML = `
+                    <div class="act-icon si-purple">👤</div>
+                    <div class="act-body">
+                        <div class="act-title">Signed in as ${name} <span class="act-badge ab-safe">Auth</span></div>
+                        <div class="act-time">Just now</div>
+                    </div>`;
+                feed.insertBefore(loginItem, feed.firstChild);
+            });
+        });
+
+function handleSignOut() {
+            signOut();
+            window.location.href = 'login.html';
         }
 
         function toggleSidebar() {

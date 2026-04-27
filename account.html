@@ -306,80 +306,43 @@
         </div>
     </div>
 
-    <!-- Firebase Logic -->
+    <!-- Auth Logic -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth.js"></script>
     <script src="script.js"></script>
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut, updateProfile as fbUpdateProfile, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initGoogleAuth((user) => {
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",
-            authDomain: "ai-studio-applet-webapp-ed2b6.firebaseapp.com",
-            projectId: "ai-studio-applet-webapp-ed2b6",
-            storageBucket: "ai-studio-applet-webapp-ed2b6.firebasestorage.app",
-            messagingSenderId: "343966893252",
-            appId: "1:343966893252:web:1d15560bc9e2834d987591"
-        };
+                document.getElementById('profile-name').textContent = user.name || 'Security User';
+                document.getElementById('profile-email').textContent = user.email;
+                document.getElementById('input-name').value = user.name || '';
+                document.getElementById('input-email').value = user.email;
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+                const initial = (user.name || user.email).charAt(0).toUpperCase();
+                const avatarEl = document.getElementById('profile-avatar');
+                if (user.picture) {
+                    avatarEl.innerHTML = `<img src="${user.picture}" alt="Profile">`;
+                } else {
+                    avatarEl.textContent = initial;
+                }
 
-        onAuthStateChanged(auth, user => {
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Populating UI
-            document.getElementById('profile-name').textContent = user.displayName || 'Security User';
-            document.getElementById('profile-email').textContent = user.email;
-            document.getElementById('input-name').value = user.displayName || '';
-            document.getElementById('input-email').value = user.email;
-            
-            const initial = (user.displayName || user.email).charAt(0).toUpperCase();
-            const avatarEl = document.getElementById('profile-avatar');
-            if (user.photoURL) {
-                avatarEl.innerHTML = `<img src="${user.photoURL}" alt="Profile">`;
-            } else {
-                avatarEl.textContent = initial;
-            }
-
-            const sidebarBtn = document.getElementById('sidebar-auth-btn');
-            if (sidebarBtn) {
-                sidebarBtn.textContent = `👤 ${user.displayName || user.email.split('@')[0]}`;
-                sidebarBtn.href = 'dashboard.html';
-            }
+                const sidebarBtn = document.getElementById('sidebar-auth-btn');
+                if (sidebarBtn) {
+                    sidebarBtn.textContent = `👤 ${user.name || user.email.split('@')[0]}`;
+                    sidebarBtn.href = 'dashboard.html';
+                }
+            });
         });
 
         window.handleSignOut = () => {
-            signOut(auth).then(() => {
-                window.location.href = 'login.html';
-            });
-        };
-
-        window.updateProfile = async () => {
-            const newName = document.getElementById('input-name').value;
-            const user = auth.currentUser;
-            if (user) {
-                try {
-                    await fbUpdateProfile(user, { displayName: newName });
-                    alert("Profile updated successfully!");
-                    location.reload();
-                } catch (e) {
-                    alert("Error updating profile: " + e.message);
-                }
-            }
-        };
-
-        window.handlePasswordReset = async () => {
-            const email = auth.currentUser.email;
-            try {
-                await sendPasswordResetEmail(auth, email);
-                alert("Password reset email sent to " + email);
-            } catch (e) {
-                alert("Error: " + e.message);
-            }
-        };
+            signOut();
+            window.location.href = 'login.html';
+};
     </script>
 </body>
 </html>
