@@ -22,6 +22,18 @@ import {
     signOut
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
+// ─── File:// Protocol Guard ────────────────────────────────────────────────────
+// Firebase & auth redirects will NOT work when opening files directly in a browser.
+// Always serve via: npm run dev  →  http://localhost:3000
+if (window.location.protocol === 'file:') {
+    console.warn(
+        '%c⚠️  The Papyrus: auth.js loaded via file:// protocol!\n' +
+        'Firebase auth and page redirects will not work.\n' +
+        'Run: npm run dev  →  then open http://localhost:3000',
+        'color:#fca5a5;font-size:12px;'
+    );
+}
+
 const FIREBASE_CONFIG = {
     apiKey:            "AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",
     authDomain:        "ai-studio-applet-webapp-ed2b6.firebaseapp.com",
@@ -135,11 +147,15 @@ onAuthStateChanged(auth, (user) => {
     }
 
     // ── Auth-guard for protected pages (dashboard + account) ───────────────
-    const protectedPages = ['dashboard.html', 'account.html'];
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    if (protectedPages.includes(currentPage) && !user) {
-        window.location.href = 'login.html';
-        return;
+    // Only redirect on http/https — file:// redirects are blocked by browsers
+    // and cause "Unsafe attempt to load URL" errors.
+    if (window.location.protocol !== 'file:') {
+        const protectedPages = ['dashboard.html', 'account.html'];
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        if (protectedPages.includes(currentPage) && !user) {
+            window.location.href = 'login.html';
+            return;
+        }
     }
 
     // Hide auth-loading screen on dashboard

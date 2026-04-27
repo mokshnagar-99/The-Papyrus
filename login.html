@@ -2,9 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="White AI logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In — The Papyrus</title>
     <meta name="description" content="Sign in or create your free account on The Papyrus to access your personal security dashboard and AI-powered protection tools.">
+    <!-- Google Fonts: loaded as <link> tags to avoid CSS @import blocking -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="transitions.css">
     <script src="transitions.js" defer></script>
@@ -389,7 +394,7 @@
             </div>
 
             <!-- Google OAuth -->
-            <button class="btn-google" id="btn-google-auth" onclick="handleGoogleAuth()">
+            <button class="btn-google" id="btn-google-auth" onclick="handleGoogleAuth()" disabled>
                 <svg class="google-icon" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -423,7 +428,7 @@
                     </div>
                     <input type="password" id="input-password" class="field-input" placeholder="••••••••" required minlength="6">
                 </div>
-                <button type="submit" class="btn-submit" id="btn-submit">
+                <button type="submit" class="btn-submit" id="btn-submit" disabled>
                     <span id="submit-label">Sign In</span>
                     <div class="spinner" id="submit-spinner"></div>
                 </button>
@@ -437,47 +442,84 @@
         </div>
     </div>
 
+    <!-- File:// protocol guard — show friendly message if opened directly instead of via dev server -->
+    <script>
+        if (window.location.protocol === 'file:') {
+            document.addEventListener('DOMContentLoaded', () => {
+                const banner = document.createElement('div');
+                banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7f1d1d;color:#fecaca;padding:0.75rem 1.5rem;font-size:0.9rem;font-weight:600;text-align:center;font-family:sans-serif;';
+                banner.innerHTML = '⚠️ <strong>Open via dev server, not as a file!</strong> Run <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">npm run dev</code> in your terminal, then visit <strong>http://localhost:3000/login.html</strong>';
+                document.body.prepend(banner);
+            });
+        }
+    </script>
+
     <!-- Firebase -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import {
-            getAuth,
-            GoogleAuthProvider,
-            signInWithPopup,
-            signOut,
-            onAuthStateChanged,
-            signInWithEmailAndPassword,
-            createUserWithEmailAndPassword,
-            sendPasswordResetEmail,
-            updateProfile
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        try {
+            const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+            const {
+                getAuth,
+                GoogleAuthProvider,
+                signInWithPopup,
+                onAuthStateChanged,
+                signInWithEmailAndPassword,
+                createUserWithEmailAndPassword,
+                sendPasswordResetEmail,
+                updateProfile
+            } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",
-            authDomain: "ai-studio-applet-webapp-ed2b6.firebaseapp.com",
-            projectId: "ai-studio-applet-webapp-ed2b6",
-            storageBucket: "ai-studio-applet-webapp-ed2b6.firebasestorage.app",
-            messagingSenderId: "343966893252",
-            appId: "1:343966893252:web:1d15560bc9e2834d987591"
-        };
+            const firebaseConfig = {
+                apiKey: "AIzaSyAB4hMxvMaBUgSfg_YADTr6ZCNwic2ctQk",
+                authDomain: "ai-studio-applet-webapp-ed2b6.firebaseapp.com",
+                projectId: "ai-studio-applet-webapp-ed2b6",
+                storageBucket: "ai-studio-applet-webapp-ed2b6.firebasestorage.app",
+                messagingSenderId: "343966893252",
+                appId: "1:343966893252:web:1d15560bc9e2834d987591"
+            };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const provider = new GoogleAuthProvider();
 
-        // If already logged in, redirect
-        onAuthStateChanged(auth, user => {
-            if (user) window.location.href = 'dashboard.html';
-        });
+            // If already logged in, redirect away from login page
+            onAuthStateChanged(auth, user => {
+                if (user) window.location.href = 'dashboard.html';
+            });
 
-        // Expose globally
-        window._auth = auth;
-        window._provider = provider;
-        window._signInWithPopup = signInWithPopup;
-        window._signIn = signInWithEmailAndPassword;
-        window._createUser = createUserWithEmailAndPassword;
-        window._updateProfile = updateProfile;
-        window._resetPassword = sendPasswordResetEmail;
+            // Expose globally for the non-module script below
+            window._auth = auth;
+            window._provider = provider;
+            window._signInWithPopup = signInWithPopup;
+            window._signIn = signInWithEmailAndPassword;
+            window._createUser = createUserWithEmailAndPassword;
+            window._updateProfile = updateProfile;
+            window._resetPassword = sendPasswordResetEmail;
+            window._firebaseReady = true;
+
+            // Enable auth buttons now that Firebase is ready
+            ['btn-google-auth', 'btn-submit'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = false;
+            });
+
+        } catch (err) {
+            console.error('Firebase failed to load:', err);
+            // Show offline / network error message on the form
+            document.addEventListener('DOMContentLoaded', () => {
+                const msgEl = document.getElementById('auth-message');
+                if (msgEl) {
+                    msgEl.textContent = '🔌 No internet connection. Firebase could not load. Please connect to the internet and reload.';
+                    msgEl.className = 'auth-message msg-error';
+                    msgEl.style.display = 'block';
+                }
+                // Disable auth buttons
+                ['btn-google-auth', 'btn-submit'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.disabled = true;
+                });
+            });
+        }
     </script>
 
     <script>
@@ -510,6 +552,10 @@
 
         // ---------- GOOGLE AUTH ----------
         async function handleGoogleAuth() {
+            if (!window._firebaseReady) {
+                showMessage('Firebase is still loading. Please wait a moment and try again.', 'info');
+                return;
+            }
             setLoading('google', true);
             try {
                 await window._signInWithPopup(window._auth, window._provider);
@@ -525,6 +571,10 @@
         // ---------- EMAIL AUTH ----------
         async function handleEmailAuth(e) {
             e.preventDefault();
+            if (!window._firebaseReady) {
+                showMessage('Firebase is still loading. Please wait a moment and try again.', 'info');
+                return;
+            }
             const email = document.getElementById('input-email').value.trim();
             const password = document.getElementById('input-password').value;
 
@@ -550,6 +600,10 @@
         // ---------- FORGOT PASSWORD ----------
         async function handleForgotPassword(e) {
             e.preventDefault();
+            if (!window._firebaseReady) {
+                showMessage('Firebase is still loading. Please wait a moment and try again.', 'info');
+                return;
+            }
             const email = document.getElementById('input-email').value.trim();
             if (!email) { showMessage('Enter your email first to reset your password.', 'info'); return; }
             try {

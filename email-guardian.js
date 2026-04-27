@@ -64,7 +64,7 @@
                 <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:1.25rem;margin-top:1.25rem;">
                     <p style="font-size:0.82rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">🔗 Connect Inbox for Live Scanning</p>
                     <div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:0.85rem;margin-bottom:1rem;font-size:0.82rem;color:#fbbf24;line-height:1.5;">
-                        ⚠️ <strong>Note:</strong> Live inbox scanning requires a backend service with OAuth credentials (Firebase Functions + Gmail API). This demo simulates the full UX flow. The paste-to-scan above works fully with AI analysis.
+                        ⚠️ <strong>Note:</strong> Live inbox scanning requires a backend service with OAuth credentials (Firebase Functions + Gmail API). This demo simulates the full UX flow. The paste-to-scan above works fully.
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
                         ${['gmail','outlook','yahoo','imap'].map(p => `
@@ -236,53 +236,7 @@ window.runEmailGuardianScan = async function() {
     if (fill) fill.style.width = '0%';
     if (results) results.style.display = 'none';
 
-    // Use Gemini if key is set
-    if (window.hasGeminiKey && window.hasGeminiKey()) {
-        let w = 0;
-        const fake = setInterval(() => { if (w < 80) { w += 6; if (fill) fill.style.width = w + '%'; } }, 150);
-        try {
-            const prompt = `You are an expert email security analyst. Analyze the following email for phishing indicators.
-Respond ONLY with a valid JSON object (no markdown):
-{
-  "isPhishing": boolean,
-  "riskLevel": "safe" | "suspicious" | "critical",
-  "riskScore": number (0-10),
-  "flags": ["list of specific issues"],
-  "senderAnalysis": "brief sender domain analysis",
-  "explanation": "1-2 sentence plain-English summary",
-  "recommendation": "specific action user should take"
-}
 
-Email to analyze:
----
-${input}
----`;
-            const raw = await window.callGemini(prompt);
-            clearInterval(fake);
-            if (fill) fill.style.width = '100%';
-            const parsed = window.parseGeminiJSON(raw);
-            const bc = parsed.riskLevel === 'safe' ? 'badge-safe' : parsed.riskLevel === 'suspicious' ? 'badge-warning' : 'badge-danger';
-            const bl = parsed.riskLevel === 'safe' ? `✅ Safe (${parsed.riskScore}/10)` : parsed.riskLevel === 'suspicious' ? `⚠️ Suspicious (${parsed.riskScore}/10)` : `🚨 Phishing Detected (${parsed.riskScore}/10)`;
-            if (results) {
-                results.style.display = 'block';
-                results.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;">
-                        <div class="${bc} sim-badge" style="margin:0;">${bl}</div>
-                        <span style="font-size:0.72rem;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;padding:0.2rem 0.6rem;border-radius:100px;font-weight:700;">🤖 Gemini AI</span>
-                    </div>
-                    ${parsed.senderAnalysis ? `<p style="margin-bottom:0.5rem;"><strong>Sender Analysis:</strong> ${parsed.senderAnalysis}</p>` : ''}
-                    <p><strong>Assessment:</strong> ${parsed.explanation}</p>
-                    ${parsed.flags?.length ? `<p style="margin-top:0.6rem;"><strong>Flags:</strong> ${parsed.flags.map(f => `<span style="background:rgba(239,68,68,0.1);color:#f87171;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.82rem;margin:0.1rem;display:inline-block;">${f}</span>`).join(' ')}</p>` : ''}
-                    <p style="margin-top:0.6rem;font-size:0.88rem;color:#fbbf24;"><strong>Action:</strong> ${parsed.recommendation}</p>
-                `;
-            }
-        } catch(e) {
-            clearInterval(fake);
-            // Fallback to heuristics
-            _runEGHeuristics(input);
-        }
-        return;
-    }
     // Heuristic fallback
     let w2 = 0;
     const iv = setInterval(() => {
@@ -314,6 +268,5 @@ function _runEGHeuristics(text) {
     results.innerHTML = `
         <div class="${bc} sim-badge">${bl}</div>
         ${flags.length ? `<p style="margin-top:0.75rem;"><strong>Red flags found:</strong> ${flags.map(f => `<span style="background:rgba(239,68,68,0.1);color:#f87171;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.82rem;margin:0.1rem;display:inline-block;">${f}</span>`).join(' ')}</p>` : '<p style="margin-top:0.75rem;">No obvious phishing indicators detected.</p>'}
-        <p style="font-size:0.8rem;color:rgba(255,255,255,0.35);margin-top:0.6rem;">Add a Gemini API key in ⚙️ AI Settings for deeper AI-powered analysis.</p>
     `;
 }

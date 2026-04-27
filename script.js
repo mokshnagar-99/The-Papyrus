@@ -1,205 +1,3 @@
-// ============================================================
-//  GEMINI AI INTEGRATION — The Papyrus
-//  API key is stored in localStorage (never sent to any server)
-//  Falls back to heuristic mode if no key is set.
-// ============================================================
-
-const GEMINI_MODEL = 'gemini-2.0-flash';
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
-// --- Key helpers ---
-window.getGeminiKey = () => localStorage.getItem('papyrus_gemini_key') || '';
-window.setGeminiKey = (key) => { localStorage.setItem('papyrus_gemini_key', key.trim()); };
-window.clearGeminiKey = () => { localStorage.removeItem('papyrus_gemini_key'); };
-window.hasGeminiKey = () => !!window.getGeminiKey();
-
-// --- Core Gemini text call ---
-window.callGemini = async function(prompt) {
-    const key = window.getGeminiKey();
-    if (!key) throw new Error('NO_KEY');
-
-    const res = await fetch(`${GEMINI_ENDPOINT}?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.2, maxOutputTokens: 1024 }
-        })
-    });
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const msg = err?.error?.message || `HTTP ${res.status}`;
-        throw new Error(msg);
-    }
-
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-};
-
-// --- Gemini vision call (base64 image) ---
-window.callGeminiVision = async function(prompt, base64data, mimeType) {
-    const key = window.getGeminiKey();
-    if (!key) throw new Error('NO_KEY');
-
-    const res = await fetch(`${GEMINI_ENDPOINT}?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{
-                parts: [
-                    { text: prompt },
-                    { inline_data: { mime_type: mimeType, data: base64data } }
-                ]
-            }],
-            generationConfig: { temperature: 0.2, maxOutputTokens: 1024 }
-        })
-    });
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-};
-
-// --- JSON extractor (Gemini sometimes wraps in markdown fences) ---
-window.parseGeminiJSON = function(text) {
-    const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-    return JSON.parse(clean);
-};
-
-// --- API Key Settings Modal ---
-window.openGeminiSettings = function() {
-    const existing = document.getElementById('gemini-settings-modal');
-    if (existing) existing.remove();
-
-    const currentKey = window.getGeminiKey();
-    const modal = document.createElement('div');
-    modal.id = 'gemini-settings-modal';
-    modal.style.cssText = `
-        position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(12px);
-        display:flex;align-items:center;justify-content:center;z-index:9999;
-    `;
-    modal.innerHTML = `
-        <div style="background:linear-gradient(135deg,#0d0f1a,#111827);border:1px solid rgba(99,102,241,0.3);
-            border-radius:20px;padding:2.5rem;width:90%;max-width:500px;position:relative;
-            box-shadow:0 20px 60px rgba(0,0,0,0.7),0 0 30px rgba(99,102,241,0.1);">
-            <button onclick="document.getElementById('gemini-settings-modal').remove()"
-                style="position:absolute;top:1rem;right:1.2rem;background:none;border:none;
-                color:rgba(255,255,255,0.4);font-size:1.8rem;cursor:pointer;line-height:1;
-                transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">×</button>
-            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
-                <span style="font-size:1.5rem;">⚙️</span>
-                <h2 style="font-family:Cinzel,serif;font-size:1.3rem;color:#fff;margin:0;">Gemini AI Settings</h2>
-            </div>
-            <p style="color:rgba(255,255,255,0.45);font-size:0.85rem;margin-bottom:1.75rem;line-height:1.6;">
-                Enter your Google Gemini API key to unlock real AI-powered analysis for Phishing Detection,
-                Threat Analysis, DLP, and Deepfake scanning. Your key is stored only in your browser.
-            </p>
-            <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
-                <p style="font-size:0.78rem;color:#a5b4fc;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.4rem;">🔒 Privacy Guarantee</p>
-                <p style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.5;">Your API key is never sent to The Papyrus servers. Calls go directly from your browser to Google's API.</p>
-            </div>
-            <label style="display:block;font-size:0.82rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.5px;">Gemini API Key</label>
-            <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
-                <input id="gemini-key-input" type="password" placeholder="AIza..."
-                    value="${currentKey}"
-                    style="flex:1;padding:0.85rem 1rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-                    border-radius:10px;color:#fff;font-size:0.9rem;font-family:monospace;outline:none;
-                    transition:all 0.2s;" onfocus="this.style.borderColor='rgba(99,102,241,0.7)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
-                <button onclick="const i=document.getElementById('gemini-key-input');i.type=i.type==='password'?'text':'password';"
-                    style="padding:0.85rem;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
-                    border-radius:10px;color:rgba(255,255,255,0.6);cursor:pointer;font-size:1rem;transition:all 0.2s;"
-                    onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">👁</button>
-            </div>
-            <div id="gemini-status-msg" style="display:none;padding:0.7rem 1rem;border-radius:8px;font-size:0.85rem;margin-bottom:1rem;"></div>
-            <div style="display:flex;gap:0.75rem;">
-                <button onclick="window._saveGeminiKey()"
-                    style="flex:1;padding:0.9rem;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;
-                    border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;
-                    font-size:0.95rem;box-shadow:0 4px 15px rgba(99,102,241,0.3);transition:all 0.3s;"
-                    onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                    Save & Activate
-                </button>
-                ${currentKey ? `<button onclick="window._clearGeminiKey()"
-                    style="padding:0.9rem 1.2rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
-                    border-radius:10px;color:#f87171;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;
-                    font-size:0.9rem;transition:all 0.2s;"
-                    onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
-                    Remove Key
-                </button>` : ''}
-            </div>
-            <p style="text-align:center;margin-top:1rem;font-size:0.78rem;color:rgba(255,255,255,0.3);">
-                Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#a5b4fc;text-decoration:none;">aistudio.google.com</a>
-            </p>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
-};
-
-window._saveGeminiKey = async function() {
-    const key = document.getElementById('gemini-key-input').value.trim();
-    const msg = document.getElementById('gemini-status-msg');
-    if (!key) { _showGeminiMsg('Please enter a valid API key.', 'warn'); return; }
-
-    _showGeminiMsg('Testing key...', 'info');
-
-    try {
-        // Quick test call
-        const res = await fetch(`${GEMINI_ENDPOINT}?key=${key}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: 'Reply with OK' }] }] })
-        });
-        if (!res.ok) {
-            const e = await res.json();
-            throw new Error(e?.error?.message || 'Invalid key');
-        }
-        window.setGeminiKey(key);
-        _showGeminiMsg('✅ Key saved! Gemini AI is now active.', 'success');
-        setTimeout(() => { document.getElementById('gemini-settings-modal')?.remove(); window._refreshGeminiIndicator(); }, 1500);
-    } catch(e) {
-        _showGeminiMsg(`❌ ${e.message}`, 'error');
-    }
-};
-
-window._clearGeminiKey = function() {
-    window.clearGeminiKey();
-    document.getElementById('gemini-settings-modal')?.remove();
-    window._refreshGeminiIndicator();
-};
-
-function _showGeminiMsg(text, type) {
-    const el = document.getElementById('gemini-status-msg');
-    if(!el) return;
-    const styles = {
-        info:    'background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;',
-        success: 'background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;',
-        warn:    'background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;',
-        error:   'background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#f87171;',
-    };
-    el.style.cssText = `display:block;padding:0.7rem 1rem;border-radius:8px;font-size:0.85rem;margin-bottom:1rem;${styles[type] || styles.info}`;
-    el.textContent = text;
-}
-
-// Update AI badge indicators across pages
-window._refreshGeminiIndicator = function() {
-    const haKey = window.hasGeminiKey();
-    document.querySelectorAll('.gemini-status-btn').forEach(btn => {
-        btn.innerHTML = haKey ? '🤖 Gemini Active' : '⚙️ AI Settings';
-        btn.style.background = haKey ? 'rgba(74,222,128,0.12)' : 'rgba(99,102,241,0.12)';
-        btn.style.borderColor = haKey ? 'rgba(74,222,128,0.3)' : 'rgba(99,102,241,0.3)';
-        btn.style.color = haKey ? '#4ade80' : '#a5b4fc';
-    });
-};
-
-// Run on load to set initial indicator state
-document.addEventListener('DOMContentLoaded', window._refreshGeminiIndicator);
 
 // Language switching functionality
 
@@ -621,59 +419,7 @@ window.runPhishingScan = async function() {
     results.style.display = 'none';
     progressFill.style.width = '0%';
     
-    // If Gemini key is set, use real AI analysis
-    if(window.hasGeminiKey()) {
-        // Animate to 80% while waiting
-        let w = 0;
-        const fakeInterval = setInterval(() => { if(w < 80) { w += 5; progressFill.style.width = w + '%'; } }, 150);
-        
-        try {
-            const prompt = `You are an expert email security analyst. Analyze the following email/message for phishing indicators.
-Respond ONLY with a single valid JSON object (no markdown, no extra text):
-{
-  "isPhishing": boolean,
-  "riskLevel": "safe" | "suspicious" | "critical",
-  "riskScore": number (0-10),
-  "flags": ["array of specific issues found"],
-  "explanation": "1-2 sentence summary",
-  "recommendation": "specific action to take"
-}
 
-Email/Message to analyze:
----
-${input}
----`;
-            
-            const raw = await window.callGemini(prompt);
-            clearInterval(fakeInterval);
-            progressFill.style.width = '100%';
-            
-            const parsed = window.parseGeminiJSON(raw);
-            const badgeClass = parsed.riskLevel === 'safe' ? 'badge-safe' : parsed.riskLevel === 'suspicious' ? 'badge-warning' : 'badge-danger';
-            const badgeLabel = parsed.riskLevel === 'safe' ? `✅ Safe (Risk Score: ${parsed.riskScore}/10)` : parsed.riskLevel === 'suspicious' ? `⚠️ Suspicious (Risk Score: ${parsed.riskScore}/10)` : `🚨 Phishing Detected (Risk Score: ${parsed.riskScore}/10)`;
-            
-            results.style.display = 'block';
-            results.innerHTML = `
-                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;">
-                    <div class="${badgeClass} sim-badge" style="margin:0;">${badgeLabel}</div>
-                    <span style="font-size:0.72rem;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;padding:0.2rem 0.6rem;border-radius:100px;font-weight:700;">🤖 Gemini AI</span>
-                </div>
-                <p><strong>Analysis:</strong> ${parsed.explanation}</p>
-                ${parsed.flags?.length ? `<p style="margin-top:0.6rem;"><strong>Flags detected:</strong> ${parsed.flags.map(f => `<span style="background:rgba(239,68,68,0.1);color:#f87171;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.82rem;margin:0.1rem;display:inline-block;">${f}</span>`).join(' ')}</p>` : ''}
-                <p style="margin-top:0.6rem;font-size:0.88rem;color:#fbbf24;"><strong>Recommendation:</strong> ${parsed.recommendation}</p>
-            `;
-        } catch(e) {
-            clearInterval(fakeInterval);
-            if(e.message !== 'NO_KEY') {
-                progressFill.style.width = '100%';
-                results.style.display = 'block';
-                results.innerHTML = `<div class="badge-warning sim-badge">Gemini Error — Falling back to heuristics</div><p style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-top:0.5rem;">${e.message}</p>`;
-                setTimeout(() => displayPhishingResults(input), 800);
-                return;
-            }
-        }
-        return;
-    }
     
     // Heuristic fallback
     let w2 = 0;
@@ -704,7 +450,7 @@ function displayPhishingResults(text) {
     if(score === 0) {
         results.innerHTML = `
             <div class="badge-safe sim-badge">Safe - 0 Threats Detected</div>
-            <p style="margin-top:0.5rem">No obvious phishing indicators found. <em style="color:rgba(255,255,255,0.35);">(Add a Gemini key for deeper AI analysis)</em></p>
+            <p style="margin-top:0.5rem">No obvious phishing indicators found.</p>
         `;
     } else if (score < 3) {
         results.innerHTML = `
@@ -1054,50 +800,7 @@ window.runAIThreatScan = async function() {
     results.style.display = 'none';
     progressFill.style.width = '0%';
     
-    if(window.hasGeminiKey()) {
-        let w = 0;
-        const fakeInterval = setInterval(() => { if(w < 80) { w += 4; progressFill.style.width = w + '%'; } }, 120);
-        try {
-            const prompt = `You are a senior SOC analyst. Analyze the following server logs or user activity data for security anomalies.
-Respond ONLY with a single valid JSON object (no markdown, no extra text):
-{
-  "anomalyScore": number (0.0 to 1.0),
-  "riskLevel": "normal" | "suspicious" | "critical",
-  "threats": ["list of specific threats or anomalies found"],
-  "affectedEntities": ["usernames, IPs, or resources involved"],
-  "explanation": "2-3 sentence analysis",
-  "mitigations": ["list of recommended actions"]
-}
 
-Log data:
----
-${input}
----`;
-            const raw = await window.callGemini(prompt);
-            clearInterval(fakeInterval);
-            progressFill.style.width = '100%';
-            const p = window.parseGeminiJSON(raw);
-            const badgeClass = p.riskLevel === 'normal' ? 'badge-safe' : p.riskLevel === 'suspicious' ? 'badge-warning' : 'badge-danger';
-            const scoreLabel = `Anomaly Score: ${p.anomalyScore?.toFixed(2) ?? '—'}`;
-            results.style.display = 'block';
-            results.innerHTML = `
-                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;">
-                    <div class="${badgeClass} sim-badge" style="margin:0;">${p.riskLevel === 'normal' ? '✅ Normal Activity' : p.riskLevel === 'suspicious' ? '⚠️ Suspicious Behavior' : '🚨 Critical Threat'} (${scoreLabel})</div>
-                    <span style="font-size:0.72rem;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;padding:0.2rem 0.6rem;border-radius:100px;font-weight:700;">🤖 Gemini AI</span>
-                </div>
-                <p>${p.explanation}</p>
-                ${p.threats?.length ? `<p style="margin-top:0.6rem;"><strong>Threats:</strong> ${p.threats.map(t => `<span style="background:rgba(239,68,68,0.1);color:#f87171;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.82rem;margin:0.1rem;display:inline-block;">${t}</span>`).join(' ')}</p>` : ''}
-                ${p.affectedEntities?.length ? `<p style="margin-top:0.4rem;font-size:0.85rem;"><strong>Entities:</strong> ${p.affectedEntities.join(', ')}</p>` : ''}
-                ${p.mitigations?.length ? `<p style="margin-top:0.6rem;font-size:0.85rem;color:#fbbf24;"><strong>Recommended Actions:</strong><br>${p.mitigations.map((m,i) => `${i+1}. ${m}`).join('<br>')}</p>` : ''}
-            `;
-        } catch(e) {
-            clearInterval(fakeInterval);
-            results.style.display = 'block';
-            results.innerHTML = `<div class="badge-warning sim-badge">Gemini Error — Heuristic Fallback</div><p style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">${e.message}</p>`;
-            setTimeout(() => _runAIThreatHeuristic(input), 800);
-        }
-        return;
-    }
     _runAIThreatHeuristic(input);
 }
 
@@ -1144,59 +847,7 @@ window.runDeepfakeScan = async function() {
     results.style.display = 'none';
     progressFill.style.width = '0%';
     
-    // Gemini Vision — only for images (API doesn't accept video/audio blobs)
-    if(window.hasGeminiKey() && isImage) {
-        let w = 0;
-        const fakeInterval = setInterval(() => { if(w < 75) { w += 3; progressFill.style.width = w + '%'; } }, 120);
-        try {
-            const base64 = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = e => resolve(e.target.result.split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-            const prompt = `You are an expert in digital forensics and deepfake detection. Analyze this image for signs of AI generation or manipulation.
-Respond ONLY with a single valid JSON object (no markdown, no extra text):
-{
-  "isManipulated": boolean,
-  "confidence": number (0-100),
-  "verdict": "authentic" | "suspicious" | "ai_generated",
-  "indicators": ["specific visual artifacts or signs you detected"],
-  "analysis": "2-3 sentence detailed analysis"
-}`;
-            const raw = await window.callGeminiVision(prompt, base64, file.type);
-            clearInterval(fakeInterval);
-            progressFill.style.width = '100%';
-            const p = window.parseGeminiJSON(raw);
-            const badgeClass = p.verdict === 'authentic' ? 'badge-safe' : p.verdict === 'suspicious' ? 'badge-warning' : 'badge-danger';
-            const badgeLabel = p.verdict === 'authentic' ? `✅ Authentic Image — ${p.confidence}% Confidence` : p.verdict === 'suspicious' ? `⚠️ Suspicious — ${p.confidence}% Confidence` : `🚨 AI-Generated / Deepfake — ${p.confidence}% Confidence`;
-            results.style.display = 'block';
-            results.innerHTML = `
-                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;">
-                    <div class="${badgeClass} sim-badge" style="margin:0;">${badgeLabel}</div>
-                    <span style="font-size:0.72rem;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;padding:0.2rem 0.6rem;border-radius:100px;font-weight:700;">🤖 Gemini Vision</span>
-                </div>
-                <p><strong>File:</strong> ${file.name} (${sizeKB} KB)</p>
-                <p style="margin-top:0.5rem;">${p.analysis}</p>
-                ${p.indicators?.length ? `<p style="margin-top:0.6rem;"><strong>Visual Indicators:</strong> ${p.indicators.map(i => `<span style="background:rgba(239,68,68,0.1);color:#f87171;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.82rem;margin:0.1rem;display:inline-block;">${i}</span>`).join(' ')}</p>` : ''}
-            `;
-        } catch(e) {
-            clearInterval(fakeInterval);
-            results.style.display = 'block';
-            results.innerHTML = `<div class="badge-warning sim-badge">Gemini Error — Heuristic Fallback</div><p style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">${e.message}</p>`;
-            setTimeout(() => _runDeepfakeHeuristic(file, sizeKB, isImage, isAudio), 600);
-        }
-        return;
-    }
-    
-    // Heuristic fallback (or non-image with Gemini)
-    if(window.hasGeminiKey() && !isImage) {
-        results.style.display = 'block';
-        progressFill.style.width = '100%';
-        results.innerHTML = `<div class="badge-warning sim-badge" style="margin-bottom:0.5rem;">⚠️ Gemini Vision supports images only</div><p style="font-size:0.85rem;color:rgba(255,255,255,0.5);">Falling back to heuristic analysis for video/audio files.</p>`;
-        setTimeout(() => _runDeepfakeHeuristic(file, sizeKB, isImage, isAudio), 600);
-        return;
-    }
+
     
     let w = 0;
     const interval = setInterval(() => {
@@ -1234,48 +885,7 @@ window.runDLPScan = async function() {
     results.style.display = 'none';
     progressFill.style.width = '0%';
     
-    if(window.hasGeminiKey()) {
-        let w = 0;
-        const fakeInterval = setInterval(() => { if(w < 80) { w += 6; progressFill.style.width = w + '%'; } }, 100);
-        try {
-            const prompt = `You are a Data Loss Prevention (DLP) engine. Scan the following text for sensitive information and policy violations.
-Respond ONLY with a single valid JSON object (no markdown, no extra text):
-{
-  "hasPII": boolean,
-  "action": "allow" | "block",
-  "riskLevel": "safe" | "warning" | "critical",
-  "violations": ["list of PII/sensitive data types found, e.g. Credit Card Number, Email Address, SSN, API Key, Phone Number, etc."],
-  "redactedPreview": "the input text with sensitive parts replaced by [REDACTED]",
-  "explanation": "brief explanation of what was found"
-}
 
-Text to scan:
----
-${input}
----`;
-            const raw = await window.callGemini(prompt);
-            clearInterval(fakeInterval);
-            progressFill.style.width = '100%';
-            const p = window.parseGeminiJSON(raw);
-            const badgeClass = p.action === 'allow' ? 'badge-safe' : p.riskLevel === 'warning' ? 'badge-warning' : 'badge-danger';
-            results.style.display = 'block';
-            results.innerHTML = `
-                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;">
-                    <div class="${badgeClass} sim-badge" style="margin:0;">${p.action === 'allow' ? '✅ Cleared — No PII Found' : '🚫 Blocked — PII Detected'}</div>
-                    <span style="font-size:0.72rem;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;padding:0.2rem 0.6rem;border-radius:100px;font-weight:700;">🤖 Gemini AI</span>
-                </div>
-                <p>${p.explanation}</p>
-                ${p.violations?.length ? `<p style="margin-top:0.6rem;"><strong>Detected:</strong> ${p.violations.map(v => `<span style="background:rgba(239,68,68,0.1);color:#f87171;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.82rem;margin:0.1rem;display:inline-block;">${v}</span>`).join(' ')}</p>` : ''}
-                ${p.redactedPreview ? `<div style="margin-top:0.75rem;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.75rem;"><p style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-bottom:0.3rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Redacted Preview</p><p style="font-size:0.85rem;font-family:monospace;color:#a5b4fc;word-break:break-all;">${p.redactedPreview.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p></div>` : ''}
-            `;
-        } catch(e) {
-            clearInterval(fakeInterval);
-            results.style.display = 'block';
-            results.innerHTML = `<div class="badge-warning sim-badge">Gemini Error — Heuristic Fallback</div><p style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">${e.message}</p>`;
-            setTimeout(() => _runDLPHeuristic(input), 600);
-        }
-        return;
-    }
     _runDLPHeuristic(input);
 }
 
@@ -1299,7 +909,7 @@ function _runDLPHeuristic(input) {
             if(flags.length > 0) {
                 results.innerHTML = `<div class="badge-danger sim-badge">🚫 Blocked — PII Detected!</div><p>Policy Violation: <strong>${flags.join(', ')}</strong>.</p><p style="font-size:0.85rem;margin-top:0.5rem;color:#f87171;">Data transfer aborted.</p>`;
             } else {
-                results.innerHTML = `<div class="badge-safe sim-badge">✅ Cleared — No PII Found</div><p>Content complies with DLP policies. Allowed to send. <em style="color:rgba(255,255,255,0.35);">(Add a Gemini key for smarter detection)</em></p>`;
+                results.innerHTML = `<div class="badge-safe sim-badge">✅ Cleared — No PII Found</div><p>Content complies with DLP policies. Allowed to send.</p>`;
             }
         }
     }, 60);
@@ -1451,7 +1061,7 @@ window.installPWA = function() {
 window.saveScanToHistory = function(tool, riskLevel, summary, engine) {
     try {
         const scans = JSON.parse(localStorage.getItem('papyrus_scan_history') || '[]');
-        scans.unshift({ tool, riskLevel, summary: (summary||'').substring(0, 120), engine: engine || (window.hasGeminiKey() ? 'gemini' : 'heuristic'), timestamp: Date.now() });
+        scans.unshift({ tool, riskLevel, summary: (summary||'').substring(0, 120), engine: engine || 'heuristic', timestamp: Date.now() });
         if (scans.length > 50) scans.length = 50;
         localStorage.setItem('papyrus_scan_history', JSON.stringify(scans));
     } catch(e) {}
@@ -1517,7 +1127,7 @@ window._downloadReport = async function(toolName, riskLevel) {
     let y = 58;
     const meta = [
         ['Tool', toolName], ['Risk Level', riskLevel.toUpperCase()],
-        ['Analysis Engine', window.hasGeminiKey() ? 'Gemini 2.0 Flash (AI)' : 'Heuristic'],
+        ['Analysis Engine', 'Heuristic'],
         ['Date', new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' })]
     ];
     meta.forEach(([k, v]) => {
@@ -1600,120 +1210,8 @@ window.switchBreachTab = function(tab) {
     });
 };
 
-// ============================================================
-//  GEMINI CHAT ASSISTANT — Floating Widget
-// ============================================================
-window.initChatWidget = function() {
-    if (document.getElementById('papyrus-chat-fab')) return;
-
-    // Inject styles
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes fabPulse { 0%,100%{box-shadow:0 8px 25px rgba(99,102,241,0.45)} 50%{box-shadow:0 8px 40px rgba(99,102,241,0.75)} }
-        #papyrus-chat-panel { display:none; flex-direction:column; }
-        #papyrus-chat-panel.open { display:flex!important; }
-        #chat-messages::-webkit-scrollbar{width:4px} #chat-messages::-webkit-scrollbar-track{background:transparent} #chat-messages::-webkit-scrollbar-thumb{background:rgba(99,102,241,0.35);border-radius:2px}
-        .cmsg-bot,.cmsg-user{display:flex;gap:0.5rem;align-items:flex-start;}
-        .cmsg-user{justify-content:flex-end;}
-        .cmsg-bubble{padding:0.65rem 0.9rem;font-size:0.87rem;line-height:1.55;max-width:88%;word-break:break-word;}
-        .cmsg-bot .cmsg-bubble{background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:12px 12px 12px 3px;color:rgba(255,255,255,0.88);}
-        .cmsg-user .cmsg-bubble{background:rgba(99,102,241,0.22);border:1px solid rgba(99,102,241,0.35);border-radius:12px 12px 3px 12px;color:#fff;}
-    `;
-    document.head.appendChild(style);
-
-    // FAB button
-    const fab = document.createElement('button');
-    fab.id = 'papyrus-chat-fab';
-    fab.title = 'Ask Papyrus AI';
-    fab.innerHTML = '💬';
-    fab.style.cssText = `position:fixed;bottom:1.5rem;right:1.5rem;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;cursor:pointer;font-size:1.35rem;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 25px rgba(99,102,241,0.45);z-index:8888;animation:fabPulse 2.5s infinite;transition:transform 0.2s;`;
-    fab.onmouseover = () => fab.style.transform = 'scale(1.1)';
-    fab.onmouseout = () => fab.style.transform = 'scale(1)';
-    fab.onclick = window.toggleChat;
-    document.body.appendChild(fab);
-
-    const hasKey = window.hasGeminiKey();
-    // Chat panel
-    const panel = document.createElement('div');
-    panel.id = 'papyrus-chat-panel';
-    panel.style.cssText = `position:fixed;bottom:5rem;right:1.5rem;width:350px;max-height:500px;background:linear-gradient(160deg,#0d0f1a,#111827);border:1px solid rgba(99,102,241,0.3);border-radius:20px;z-index:8887;box-shadow:0 20px 60px rgba(0,0,0,0.7);overflow:hidden;`;
-    panel.innerHTML = `
-        <div style="padding:0.9rem 1.1rem;background:rgba(99,102,241,0.1);border-bottom:1px solid rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:space-between;">
-            <div style="display:flex;align-items:center;gap:0.6rem;">
-                <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#22d3ee);display:flex;align-items:center;justify-content:center;font-size:0.95rem;">🤖</div>
-                <div>
-                    <div style="font-weight:700;color:#fff;font-size:0.88rem;">Papyrus AI</div>
-                    <div style="font-size:0.68rem;color:#4ade80;">● Cybersecurity Expert</div>
-                </div>
-            </div>
-            <button onclick="window.toggleChat()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.4rem;cursor:pointer;line-height:1;padding:0;">×</button>
-        </div>
-        <div id="chat-messages" style="flex:1;overflow-y:auto;padding:0.9rem;display:flex;flex-direction:column;gap:0.65rem;min-height:200px;max-height:300px;">
-            <div class="cmsg-bot"><span style="font-size:1rem;flex-shrink:0;">🤖</span><div class="cmsg-bubble">Hi! I'm Papyrus AI — your cybersecurity assistant. Ask me anything about phishing, passwords, encryption, or any of our 11 tools!</div></div>
-            ${!hasKey ? `<div class="cmsg-bot"><span style="font-size:1rem;flex-shrink:0;">⚙️</span><div class="cmsg-bubble" style="border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.08);color:#fde68a;">No Gemini API key set. Set one in AI Settings to enable the chat assistant.</div></div>` : ''}
-        </div>
-        <div style="padding:0.65rem;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:0.4rem;">
-            <input id="chat-input" type="text" placeholder="${hasKey ? 'Ask a cybersecurity question...' : 'Set API key to chat...'}"
-                ${hasKey ? '' : 'disabled'}
-                onkeydown="if(event.key==='Enter') window.sendChatMsg()"
-                style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:0.6rem 0.8rem;color:#fff;font-size:0.86rem;font-family:Outfit,sans-serif;outline:none;">
-            <button onclick="window.sendChatMsg()" ${hasKey ? '' : 'disabled'}
-                style="padding:0.6rem 0.85rem;background:${hasKey ? 'linear-gradient(135deg,#6366f1,#4f46e5)' : 'rgba(255,255,255,0.05)'};border:none;border-radius:9px;color:#fff;cursor:${hasKey ? 'pointer' : 'not-allowed'};font-size:0.95rem;">▶</button>
-        </div>
-        ${!hasKey ? `<div style="padding:0 0.65rem 0.65rem;"><button onclick="openGeminiSettings()" style="width:100%;padding:0.55rem;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:8px;color:#a5b4fc;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">⚙️ Configure Gemini API Key</button></div>` : ''}
-    `;
-    document.body.appendChild(panel);
-};
-
-window.toggleChat = function() {
-    const p = document.getElementById('papyrus-chat-panel');
-    if (!p) return;
-    p.classList.toggle('open');
-    if (p.classList.contains('open')) document.getElementById('chat-input')?.focus();
-};
-
-let _chatHistory = [];
-window.sendChatMsg = async function() {
-    if (!window.hasGeminiKey()) { window.openGeminiSettings(); return; }
-    const input = document.getElementById('chat-input');
-    const msgs = document.getElementById('chat-messages');
-    const msg = input?.value?.trim();
-    if (!msg) return;
-    input.value = '';
-
-    // User bubble
-    const ub = document.createElement('div');
-    ub.className = 'cmsg-user';
-    ub.innerHTML = `<div class="cmsg-bubble">${msg.replace(/</g,'&lt;')}</div><span style="font-size:1rem;flex-shrink:0;">👤</span>`;
-    msgs.appendChild(ub);
-
-    // Bot loading bubble
-    const bb = document.createElement('div');
-    bb.className = 'cmsg-bot';
-    bb.innerHTML = `<span style="font-size:1rem;flex-shrink:0;">🤖</span><div class="cmsg-bubble" style="color:rgba(255,255,255,0.4);">Thinking…</div>`;
-    msgs.appendChild(bb);
-    msgs.scrollTop = msgs.scrollHeight;
-
-    _chatHistory.push({ role: 'user', content: msg });
-    const lang = localStorage.getItem('language') === 'hindi' ? 'Hindi (Devanagari)' : 'English';
-    const sys = `You are Papyrus AI, a friendly expert cybersecurity assistant on The Papyrus security platform. The platform has 11 tools: Phishing Scanner, AI Threat Detection, Deepfake Detection, File Verifier, Encryption Vault, DLP Scanner, Password Guardian, Secure API Management, Fraud Detection, Privacy AI, and Breach Monitor. Answer concisely in under 120 words. Respond in ${lang}.`;
-    const prompt = `${sys}\n\n${_chatHistory.slice(-8).map(m=>`${m.role==='user'?'User':'Assistant'}: ${m.content}`).join('\n')}\nAssistant:`;
-
-    try {
-        const reply = await window.callGemini(prompt);
-        bb.querySelector('.cmsg-bubble').style.color = 'rgba(255,255,255,0.88)';
-        bb.querySelector('.cmsg-bubble').textContent = reply;
-        _chatHistory.push({ role: 'assistant', content: reply });
-    } catch(e) {
-        bb.querySelector('.cmsg-bubble').style.color = '#f87171';
-        bb.querySelector('.cmsg-bubble').textContent = `Error: ${e.message}`;
-    }
-    msgs.scrollTop = msgs.scrollHeight;
-};
-
 // Init chat widget on every page
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(window.initChatWidget, 600);
     
     // --- Auto-open Simulator Handler ---
     // Opens the simulator automatically if redirected from dashboard/about dropdowns
