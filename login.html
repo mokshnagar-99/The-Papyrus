@@ -446,19 +446,20 @@
     </script>
 
     <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://accounts.google.com/gsi/client" onload="onGoogleLoaded()" async defer></script>
     <script src="auth.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            initGoogleAuth((user) => {
-                if (user) {
-                    window.location.href = 'dashboard.html';
-                } else {
-                    renderGoogleButton('btn-google-auth');
-                }
+        function onGoogleLoaded() {
+            document.addEventListener('DOMContentLoaded', () => {
+                initGoogleAuth((user) => {
+                    if (user) {
+                        window.location.href = 'dashboard.html';
+                    }
+                });
+                renderGoogleButton('btn-google-auth');
             });
-        });
+        }
     </script>
 
     <script>
