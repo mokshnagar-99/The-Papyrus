@@ -212,7 +212,8 @@
             font-family: 'Outfit', sans-serif;
         }
         .btn-google:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
-        .google-icon { width: 20px; height: 20px; }
+        .btn-google .google-icon { width: 20px; height: 20px; }
+        .btn-google span { color: #fff; font-family: 'Outfit', sans-serif; font-weight: 500; }
 
         /* DIVIDER */
         .or-divider {
@@ -446,20 +447,18 @@
     </script>
 
     <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" onload="onGoogleLoaded()" async defer></script>
     <script src="auth.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <script>
-        function onGoogleLoaded() {
-            document.addEventListener('DOMContentLoaded', () => {
-                initGoogleAuth((user) => {
-                    if (user) {
-                        window.location.href = 'dashboard.html';
-                    }
-                });
-                renderGoogleButton('btn-google-auth');
+        document.addEventListener('DOMContentLoaded', () => {
+            initGoogleAuth((user) => {
+                if (user) {
+                    window.location.href = 'dashboard.html';
+                }
             });
-        }
+            renderGoogleButton('btn-google-auth');
+        });
     </script>
 
     <script>
