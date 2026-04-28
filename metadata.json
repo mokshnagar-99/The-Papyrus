@@ -1,5 +1,0 @@
-{
-  "name": "Secure Task Manager",
-  "description": "A task management application with Google Authentication and Firestore database for data persistence.",
-  "requestFramePermissions": []
-}
