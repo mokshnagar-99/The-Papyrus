@@ -5,7 +5,7 @@
     <link rel="icon" type="image/png" href="White AI logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incident Response Playbook — The Papyrus</title>
-    <meta name="description" content="Step-by-step incident response guides for common cybersecurity scenarios — account takeover, phishing, malware, data breach and more.">
+    <meta name="description" content="Step-by-step incident response guides for common cybersecurity scenarios — account takeover, malware, data breach and more.">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,28 +74,21 @@
             
             <div class="sidebar-dropdown">
                 <button class="sidebar-link" onclick="this.parentElement.classList.toggle('open')" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> Tools<span class="link-badge">11</span></div>
+                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> Tools<span class="link-badge">4</span></div>
                     <span class="dropdown-arrow" style="transition:transform 0.2s;">▼</span>
                 </button>
                 <div class="sidebar-dropdown-menu">
-                    <a class="sidebar-sublink" onclick="navigateToTool('phishing')">🛡️ Phishing Scanner</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('ai_threat')">🤖 AI Threat Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('deepfake')">🎭 Deepfake Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('blockchain')">⛓️ File Verifier</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('vault')">🔒 Encryption Vault</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('dlp')">🚫 Data Leakage Prev</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('password')">🔐 Password Guardian</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('api_management')">🔑 Secure API Mgmt</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('fraud')">🕵️ Fraud Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('privacy_ai')">🧬 Privacy AI</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('breach_monitor')">🔍 Breach Monitor</a>
                 </div>
             </div>
             
             <a href="quiz.html" class="sidebar-link">
                 <span class="link-icon">🧠</span> Security Quiz
             </a>
-            <a href="playbook.html" class="sidebar-link active">
+            <a href="playbook.html" class="sidebar-link">
                 <span class="link-icon">📖</span> IR Playbook
             </a>
             <a href="account.html" class="sidebar-link">
@@ -134,12 +127,6 @@
                     <h1 style="font-family:Cinzel,serif;font-size:1.9rem;color:#fff;margin-bottom:0.5rem;">Security Incident Playbooks</h1>
                     <p class="content-subtitle" style="margin-bottom:2rem;">Select your scenario for a step-by-step guided response. Don't panic — follow the steps.</p>
                     <div class="pb-grid">
-                        <div class="pb-scenario-card" onclick="startPlaybook('phishing')">
-                            <div class="pb-icon">🎣</div>
-                            <div class="pb-card-title">I Clicked a Phishing Link</div>
-                            <div class="pb-card-desc">You clicked a suspicious link in an email or message and aren't sure if you're compromised.</div>
-                            <span class="severity-tag sev-high">🔶 High Severity</span>
-                        </div>
                         <div class="pb-scenario-card" onclick="startPlaybook('account')">
                             <div class="pb-icon">🔓</div>
                             <div class="pb-card-title">My Account Was Hacked</div>
@@ -188,69 +175,6 @@
     <script src="script.js"></script>
     <script>
     const PLAYBOOKS = {
-        phishing: {
-            title: 'Phishing Click Response',
-            icon: '🎣',
-            steps: [
-                {
-                    title: 'First: Stop & Disconnect',
-                    body: `<div class="pb-alert pb-critical">⚠️ Do NOT click anything else on the page that opened. Do NOT enter any credentials.</div>
-                    <ul><li>Immediately close the suspicious tab/window</li><li>Disconnect from the internet (turn off Wi-Fi) if the page was loading or downloading</li><li>Do NOT click "OK" on any popups that appeared</li></ul>`,
-                    choices: [
-                        { text: '✅ Done — I closed it immediately and nothing loaded', next: 1 },
-                        { text: '⚠️ I entered my username/password on the page', next: 'phish_creds', danger: true },
-                        { text: '⚠️ Something downloaded and I may have opened it', next: 'phish_download', danger: true }
-                    ]
-                },
-                {
-                    title: 'Assess — Did You Log In?',
-                    body: `Good. The link opened but you didn't interact. Now let's assess the damage:`,
-                    choices: [
-                        { text: 'I did NOT enter any information', next: 2 },
-                        { text: 'I entered my email or name', next: 'phish_email_entered' },
-                    ]
-                },
-                {
-                    id: 2,
-                    title: 'Run a Malware Scan',
-                    body: `<ul><li>Run a full scan with Windows Defender or your antivirus software</li><li>Check browser extensions — remove any you don't recognize</li><li>Check recently installed apps (last 24 hours)</li><li>If you use Chrome/Firefox: Settings > Privacy > Clear browsing data</li></ul>
-                    <div class="pb-alert pb-safe">✅ If no malware is found and you didn't enter credentials, you're likely safe.</div>`,
-                    choices: [{ text: '✅ Scan is clean — I feel safe now', next: 'complete' }]
-                },
-                {
-                    id: 'phish_creds',
-                    title: '🚨 Change Your Password Immediately',
-                    body: `<div class="pb-alert pb-critical">This is urgent. The attacker may already have your password.</div>
-                    <ul><li>Go directly to the real website (type the URL manually, don't click any links)</li><li>Change your password to something strong and unique</li><li>Enable Two-Factor Authentication (2FA) immediately</li><li>Check your account's login history — look for unrecognized logins</li><li>If it was your email password: Check forwarding rules and connected apps</li><li>If it was your bank: Call your bank immediately</li></ul>`,
-                    choices: [{ text: '✅ Password changed and 2FA enabled', next: 'phish_creds_2' }]
-                },
-                {
-                    id: 'phish_creds_2',
-                    title: 'Check for Damage',
-                    body: `<ul><li>Search your email sent folder for anything you didn't send</li><li>Check if any password reset emails were triggered for other accounts</li><li>Notify anyone who might receive a phishing message from your account</li><li>Use our Password Guardian and Breach Monitor tools to check your new password</li></ul>`,
-                    choices: [{ text: '✅ All checked — damage contained', next: 'complete' }]
-                },
-                {
-                    id: 'phish_download',
-                    title: '🚨 Potential Malware Download',
-                    body: `<div class="pb-alert pb-critical">If you opened a downloaded file, assume your device is compromised.</div>
-                    <ul><li>Disconnect from the internet immediately</li><li>Do NOT access any banking or sensitive accounts from this device</li><li>Run a full antivirus scan in safe mode</li><li>Consider professional help or device reset</li><li>Change passwords on ALL accounts from a different, clean device</li></ul>`,
-                    choices: [{ text: '✅ Understood — taking action', next: 'complete' }]
-                },
-                {
-                    id: 'phish_email_entered',
-                    title: 'Email Entered — Monitor Your Account',
-                    body: `<ul><li>Your email may be added to spam/phishing lists — expect more suspicious messages</li><li>Enable spam filtering in your email client</li><li>Do NOT click "unsubscribe" in spam emails — it confirms your address is active</li><li>Consider using our Breach Monitor to check if your email appears in known breaches</li></ul>`,
-                    choices: [{ text: '✅ Got it — staying vigilant', next: 'complete' }]
-                },
-                {
-                    id: 'complete',
-                    complete: true,
-                    title: 'Incident Contained ✅',
-                    checklist: ['Closed suspicious tab/site', 'Changed affected passwords', 'Enabled 2FA where possible', 'Checked account login history', 'Ran antivirus scan', 'Notified relevant contacts if needed']
-                }
-            ]
-        },
         account: {
             title: 'Account Takeover Response',
             icon: '🔓',
