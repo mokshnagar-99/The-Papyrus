@@ -5,166 +5,58 @@
     <link rel="icon" type="image/png" href="White AI logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account Settings — The Papyrus</title>
-    <meta name="description" content="Manage your Papyrus account, security settings, and personal preferences in our secure environment.">
+    <meta name="description" content="Manage your Papyrus account, security settings, and personal preferences.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-layout.css">
-    <link rel="stylesheet" href="transitions.css">
     <style>
-        /* ======= ACCOUNT PAGE SPECIFIC STYLES ======= */
-        .settings-grid { display: grid; grid-template-columns: 320px 1fr; gap: 2.5rem; }
-        .profile-side { position: sticky; top: 100px; height: fit-content; }
-        .profile-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 24px;
-            padding: 2.5rem 1.5rem;
-            text-align: center;
-        }
-        .large-avatar {
-            width: 110px; height: 110px;
-            margin: 0 auto 1.5rem;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6366f1, #0ea5e9);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 2.8rem; color: #fff; font-weight: 800;
-            box-shadow: 0 10px 30px rgba(99,102,241,0.2);
-            border: 4px solid rgba(255,255,255,0.05);
-            overflow: hidden;
-        }
-        .large-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .profile-info h2 { font-size: 1.4rem; color: #fff; margin-bottom: 0.3rem; }
-        .profile-info p { font-size: 0.88rem; color: rgba(255,255,255,0.4); margin-bottom: 1.5rem; }
-
-        .settings-content { display: flex; flex-direction: column; gap: 1.75rem; }
-        .settings-section {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            padding: 2rem;
-        }
-        .section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
-        .section-header i { font-size: 1.2rem; font-style: normal; }
-        .section-header h3 { font-size: 1.15rem; color: #fff; }
-
-        .form-group { margin-bottom: 1.5rem; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; }
-        .form-input {
-            width: 100%;
-            padding: 0.85rem 1rem;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            color: #fff;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-            outline: none;
-        }
-        .form-input:focus { border-color: #6366f1; background: rgba(99,102,241,0.05); }
-
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
+        /* Critical inline styles - always loads */
+        body { background: #030308; color: #fff; font-family: 'Outfit', sans-serif; margin: 0; }
+        .page-content { padding: 2rem; min-height: 50vh; }
+        .settings-grid { display: grid; grid-template-columns: 320px 1fr; gap: 2.5rem; margin-top: 2rem; }
+        .profile-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 2.5rem 1.5rem; text-align: center; width: 100%; max-width: 320px; box-sizing: border-box; overflow: hidden; }
+        .profile-card h2 { color: #fff; margin-bottom: 0.3rem; font-size: 1.4rem; word-wrap: break-word; overflow-wrap: break-word; width: 100%; }
+        .profile-card p { color: rgba(255,255,255,0.4); font-size: 0.88rem; word-wrap: break-word; overflow-wrap: break-word; width: 100%; }
+        .large-avatar { width: 110px; height: 110px; margin: 0 auto 1.5rem; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #0ea5e9); display: flex; align-items: center; justify-content: center; font-size: 2.8rem; color: #fff; font-weight: 800; overflow: hidden; flex-shrink: 0; }
+        .settings-grid { display: grid; grid-template-columns: 320px 1fr; gap: 2.5rem; margin-top: 2rem; align-items: start; }
+        .settings-section { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 2rem; margin-bottom: 1.75rem; }
+        .form-input { width: 100%; padding: 0.85rem 1rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 0.95rem; box-sizing: border-box; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; font-size: 0.9rem; }
         .btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; }
-        .btn-ghost { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); }
-        .btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .btn-danger { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
-        .btn-danger:hover { background: rgba(239,68,68,0.2); }
-
-        .security-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.1rem;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 14px;
-            margin-bottom: 0.8rem;
-        }
-        .security-info { display: flex; align-items: center; gap: 1rem; }
-        .security-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .security-text h4 { font-size: 0.95rem; color: #fff; margin-bottom: 0.15rem; }
-        .security-text p { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
-
-        /* Toggle Switch */
+        .security-item { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; margin-bottom: 0.8rem; }
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #6366f1; }
         input:checked + .slider:before { transform: translateX(22px); }
-
-        .danger-zone { border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.02); }
-        .danger-zone h3 { color: #f87171; }
     </style>
 </head>
 <body>
-
-    <!-- Ambient Orbs -->
     <div class="page-orbs">
         <div class="page-orb page-orb-1"></div>
         <div class="page-orb page-orb-2"></div>
     </div>
 
-    <!-- =========== SIDEBAR =========== -->
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <a href="dashboard.html" class="sidebar-logo">
-            <img src="White AI logo.png" alt="The Papyrus">
+            <img src="White AI logo.png" alt="The Papyrus" style="height:40px;">
             <span>The Papyrus</span>
         </a>
-
         <div class="sidebar-section-label">Navigation</div>
         <div class="sidebar-nav">
-            <a href="dashboard.html" class="sidebar-link">
-                <span class="link-icon">📊</span> Dashboard
-            </a>
-            <div class="sidebar-dropdown">
-                <button class="sidebar-link" onclick="this.parentElement.classList.toggle('open')" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> Tools<span class="link-badge">11</span></div>
-                    <span class="dropdown-arrow" style="transition:transform 0.2s;">▼</span>
-                </button>
-                <div class="sidebar-dropdown-menu">
-                    <a class="sidebar-sublink" onclick="navigateToTool('phishing')">🛡️ Phishing Scanner</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('ai_threat')">🤖 AI Threat Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('deepfake')">🎭 Deepfake Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('blockchain')">⛓️ File Verifier</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('vault')">🔒 Encryption Vault</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('dlp')">🚫 Data Leakage Prev</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('password')">🔐 Password Guardian</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('api_management')">🔑 Secure API Mgmt</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('fraud')">🕵️ Fraud Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('privacy_ai')">🧬 Privacy AI</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('breach_monitor')">🔍 Breach Monitor</a>
-                </div>
-            </div>
-            <a href="quiz.html" class="sidebar-link">
-                <span class="link-icon">🧠</span> Security Quiz
-            </a>
-            <a href="playbook.html" class="sidebar-link">
-                <span class="link-icon">📖</span> IR Playbook
-            </a>
-            <a href="account.html" class="sidebar-link active">
-                <span class="link-icon">👤</span> Account
-            </a>
-            <a href="about.html" class="sidebar-link">
-                <span class="link-icon">ℹ️</span> About
-            </a>
+            <a href="dashboard.html" class="sidebar-link"><span class="link-icon">📊</span> Dashboard</a>
+            <a href="account.html" class="sidebar-link"><span class="link-icon">👤</span> Account</a>
+            <a href="about.html" class="sidebar-link"><span class="link-icon">ℹ</span> About</a>
         </div>
-
         <div class="sidebar-bottom">
-            <a href="login.html" class="sidebar-sign-in-btn" id="sidebar-auth-btn">🔑 Sign In / Up</a>
+            <a href="login.html" class="sidebar-sign-in-btn" id="sidebar-auth-btn">Sign In / Up</a>
         </div>
     </aside>
 
-    <!-- =========== MAIN CONTENT =========== -->
+    <!-- Main Content -->
     <div class="page-main">
         <header class="page-topbar">
             <div style="display:flex;align-items:center;gap:1.5rem;">
@@ -174,175 +66,173 @@
                     <span class="topbar-page-sub">Profile & Privacy</span>
                 </div>
             </div>
-            <div class="topbar-actions">
-                <button class="lang-toggle-btn" data-en="EN" data-hi="हिन्दी"><i>🌐</i> EN</button>
-                <div class="topbar-status"><div class="status-dot"></div>Secure View</div>
-            </div>
         </header>
 
         <div class="page-content">
             <div class="settings-grid">
-                
-                <!-- Profile Summary -->
                 <div class="profile-card">
                     <div class="large-avatar" id="profile-avatar">?</div>
-                    <h2 class="profile-name" id="profile-name">Loading...</h2>
-                    <p class="profile-email" id="profile-email">email@example.com</p>
-                    <div class="member-badge">
-                        ✨ Papyrus Founder
-                    </div>
+                    <h2 style="color:#fff;margin-bottom:0.3rem;font-size:1.4rem;word-wrap:break-word;overflow-wrap:break-word;" id="profile-name">Loading...</h2>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.88rem;word-wrap:break-word;overflow-wrap:break-word;" id="profile-email">email@example.com</p>
                 </div>
 
-                <!-- Settings Forms -->
                 <div class="settings-content">
-                    
-                    <!-- Personal Info -->
                     <section class="settings-section">
-                        <div class="section-header">
-                            <i>👤</i>
-                            <h3>Personal Information</h3>
-                        </div>
+                        <h3 style="color:#fff;margin-bottom:1.5rem;">Personal Information</h3>
                         <div class="form-row">
-                            <div class="form-group">
-                                <label>Display Name</label>
+                            <div>
+                                <label style="display:block;font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:0.5rem;">Display Name</label>
                                 <input type="text" class="form-input" id="input-name" placeholder="Your Name">
                             </div>
-                            <div class="form-group">
-                                <label>Username</label>
-                                <input type="text" class="form-input" id="input-username" placeholder="username" disabled>
+                            <div>
+                                <label style="display:block;font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:0.5rem;">Email</label>
+                                <input type="email" class="form-input" id="input-email" disabled>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <input type="email" class="form-input" id="input-email" placeholder="email@example.com" disabled>
-                        </div>
-                        <div class="settings-footer">
+                        <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
                             <button class="btn btn-primary" onclick="updateProfile()">Save Changes</button>
                         </div>
                     </section>
 
-                    <!-- Security -->
                     <section class="settings-section">
-                        <div class="section-header">
-                            <i>🛡️</i>
-                            <h3>Security & Privacy</h3>
-                        </div>
-                        
+                        <h3 style="color:#fff;margin-bottom:1.5rem;">Security</h3>
                         <div class="security-item">
-                            <div class="security-info">
-                                <div class="security-icon">🔑</div>
-                                <div class="security-text">
-                                    <h4>Account Password</h4>
-                                    <p>Last updated 3 months ago</p>
+                            <div style="display:flex;gap:1rem;align-items:center;">
+                                <div style="width:42px;height:42px;background:rgba(255,255,255,0.05);border-radius:12px;display:flex;align-items:center;justify-content:center;">K</div>
+                                <div>
+                                    <h4 style="color:#fff;margin:0;">Password</h4>
+                                    <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin:0;">Change your password</p>
                                 </div>
                             </div>
-                            <button class="btn btn-ghost" onclick="handlePasswordReset()">Change</button>
+                            <button class="btn" style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.1);" onclick="handlePasswordReset()">Change</button>
                         </div>
-
                         <div class="security-item">
-                            <div class="security-info">
-                                <div class="security-icon">📱</div>
-                                <div class="security-text">
-                                    <h4>Two-Factor Authentication</h4>
-                                    <p>Add an extra layer of security</p>
+                            <div style="display:flex;gap:1rem;align-items:center;">
+                                <div style="width:42px;height:42px;background:rgba(255,255,255,0.05);border-radius:12px;display:flex;align-items:center;justify-content:center;">2</div>
+                                <div>
+                                    <h4 style="color:#fff;margin:0;">Two-Factor Auth</h4>
+                                    <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin:0;">Extra security layer</p>
                                 </div>
                             </div>
                             <label class="switch">
-                                <input type="checkbox" id="tfa-toggle">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="security-item">
-                            <div class="security-info">
-                                <div class="security-icon">🌐</div>
-                                <div class="security-text">
-                                    <h4>Privacy Mode</h4>
-                                    <p>Hide your profile from global stats</p>
-                                </div>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" id="tfa-toggle" onchange="toggle2FA()">
                                 <span class="slider"></span>
                             </label>
                         </div>
                     </section>
 
-                    <!-- Preferences -->
                     <section class="settings-section">
-                        <div class="section-header">
-                            <i>⚙️</i>
-                            <h3>Preferences</h3>
-                        </div>
-                        <div class="form-group">
-                            <label>Preferred Language</label>
-                            <select class="form-input" id="pref-lang" style="width:100%; background:#000;">
-                                <option value="en">English (Global)</option>
-                                <option value="hi">Hindi (हिन्दी)</option>
+                        <h3 style="color:#fff;margin-bottom:1.5rem;">Preferences</h3>
+                        <div style="margin-bottom:1.5rem;">
+                            <label style="display:block;font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:0.5rem;">Language</label>
+                            <select class="form-input" id="pref-lang" onchange="saveLanguagePref()" style="width:100%;">
+                                <option value="en">English</option>
+                                <option value="hi">Hindi</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>Login Notifications</label>
-                            <p style="font-size:0.8rem; color:rgba(255,255,255,0.4);">Email me every time a login occurs from a new device.</p>
-                            <label class="switch" style="margin-top:0.5rem;">
-                                <input type="checkbox" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
                     </section>
 
-                    <!-- Danger Zone -->
-                    <section class="settings-section danger-zone">
-                        <div class="section-header">
-                            <i>⚠️</i>
-                            <h3>Danger Zone</h3>
-                        </div>
-                        <p style="font-size:0.85rem; color:rgba(255,255,255,0.5); margin-bottom:1.5rem;">Once you delete your account, there is no going back. Please be certain.</p>
-                        <button class="btn btn-danger">Delete Papyrus Account</button>
+                    <section class="settings-section" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.02);">
+                        <h3 style="color:#f87171;margin-bottom:1rem;">Danger Zone</h3>
+                        <p style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-bottom:1rem;">Once you delete your account, there is no going back.</p>
+                        <button class="btn" style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);" onclick="handleDeleteAccount()">Delete Account</button>
                     </section>
-
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Auth Logic -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="auth.js"></script>
-    <script src="script.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            initGoogleAuth((user) => {
-                if (!user) {
-                    window.location.href = 'login.html';
-                    return;
+        // Load user profile
+        function loadUserProfile() {
+            try {
+                const userStr = sessionStorage.getItem('googleUser');
+                let user = null;
+
+                if (userStr) {
+                    user = JSON.parse(userStr);
+                } else {
+                    user = { name: 'Demo User', email: 'demo@thepapyrus.com', picture: null };
+                    sessionStorage.setItem('googleUser', JSON.stringify(user));
                 }
 
-                document.getElementById('profile-name').textContent = user.name || 'Security User';
-                document.getElementById('profile-email').textContent = user.email;
-                document.getElementById('input-name').value = user.name || '';
-                document.getElementById('input-email').value = user.email;
+                document.getElementById('profile-name').textContent = user.name || 'Demo User';
+                document.getElementById('profile-email').textContent = user.email || 'demo@thepapyrus.com';
+                document.getElementById('input-name').value = user.name || 'Demo User';
+                document.getElementById('input-email').value = user.email || 'demo@thepapyrus.com';
 
-                const initial = (user.name || user.email).charAt(0).toUpperCase();
                 const avatarEl = document.getElementById('profile-avatar');
                 if (user.picture) {
-                    avatarEl.innerHTML = `<img src="${user.picture}" alt="Profile">`;
+                    avatarEl.innerHTML = '<img src="' + user.picture + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
                 } else {
-                    avatarEl.textContent = initial;
+                    avatarEl.textContent = (user.name || '?').charAt(0).toUpperCase();
                 }
 
                 const sidebarBtn = document.getElementById('sidebar-auth-btn');
                 if (sidebarBtn) {
-                    sidebarBtn.textContent = `👤 ${user.name || user.email.split('@')[0]}`;
+                    sidebarBtn.textContent = user.name || 'User';
                     sidebarBtn.href = 'dashboard.html';
                 }
-            });
-        });
 
-        window.handleSignOut = () => {
-            signOut();
+                document.getElementById('pref-lang').value = localStorage.getItem('preferredLang') || 'en';
+                document.getElementById('tfa-toggle').checked = localStorage.getItem('tfaEnabled') === 'true';
+            } catch (e) {
+                console.error('Error:', e);
+            }
+        }
+
+        window.updateProfile = function() {
+            const newName = document.getElementById('input-name').value.trim();
+            if (!newName) { alert('Please enter a name'); return; }
+
+            try {
+                const userStr = sessionStorage.getItem('googleUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    user.name = newName;
+                    sessionStorage.setItem('googleUser', JSON.stringify(user));
+                    document.getElementById('profile-name').textContent = newName;
+                    document.getElementById('sidebar-auth-btn').textContent = newName;
+                    alert('Profile updated!');
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        window.handlePasswordReset = function() {
+            alert('Password reset functionality requires backend integration.');
+        };
+
+        window.toggle2FA = function() {
+            const enabled = document.getElementById('tfa-toggle').checked;
+            localStorage.setItem('tfaEnabled', enabled);
+            alert('Two-Factor Authentication ' + (enabled ? 'enabled' : 'disabled'));
+        };
+
+        window.saveLanguagePref = function() {
+            const lang = document.getElementById('pref-lang').value;
+            localStorage.setItem('preferredLang', lang);
+            alert('Language preference saved!');
+        };
+
+        window.handleDeleteAccount = function() {
+            if (confirm('Are you sure you want to delete your account? This cannot be undone.')) {
+                sessionStorage.clear();
+                alert('Account deleted (demo mode)');
+                window.location.href = 'login.html';
+            }
+        };
+
+        window.handleSignOut = function() {
+            sessionStorage.removeItem('googleUser');
             window.location.href = 'login.html';
-};
+        };
+
+        // Load profile
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadUserProfile);
+        } else {
+            loadUserProfile();
+        }
     </script>
 </body>
 </html>

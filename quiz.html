@@ -5,7 +5,7 @@
     <link rel="icon" type="image/png" href="White AI logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Security Quiz — The Papyrus</title>
-    <meta name="description" content="Test your cybersecurity knowledge with The Papyrus Security Quiz — 15 questions covering phishing, encryption, passwords, and more.">
+    <meta name="description" content="Test your cybersecurity knowledge with The Papyrus Security Quiz — 15 questions covering social engineering, encryption, passwords, and more.">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,25 +81,18 @@
             
             <div class="sidebar-dropdown">
                 <button class="sidebar-link" onclick="this.parentElement.classList.toggle('open')" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> Tools<span class="link-badge">11</span></div>
+                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> Tools<span class="link-badge">4</span></div>
                     <span class="dropdown-arrow" style="transition:transform 0.2s;">▼</span>
                 </button>
                 <div class="sidebar-dropdown-menu">
-                    <a class="sidebar-sublink" onclick="navigateToTool('phishing')">🛡️ Phishing Scanner</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('ai_threat')">🤖 AI Threat Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('deepfake')">🎭 Deepfake Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('blockchain')">⛓️ File Verifier</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('vault')">🔒 Encryption Vault</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('dlp')">🚫 Data Leakage Prev</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('password')">🔐 Password Guardian</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('api_management')">🔑 Secure API Mgmt</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('fraud')">🕵️ Fraud Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('privacy_ai')">🧬 Privacy AI</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('breach_monitor')">🔍 Breach Monitor</a>
                 </div>
             </div>
             
-            <a href="quiz.html" class="sidebar-link active">
+            <a href="quiz.html" class="sidebar-link">
                 <span class="link-icon">🧠</span> Security Quiz
             </a>
             <a href="playbook.html" class="sidebar-link">
@@ -138,7 +131,7 @@
                 <div class="quiz-header">
                     <div class="content-badge">Awareness Training</div>
                     <h1>Cybersecurity Knowledge Quiz</h1>
-                    <p class="content-subtitle" style="text-align:center;margin:0 auto;">Test your understanding of phishing, encryption, passwords, social engineering, and modern threats.</p>
+                    <p class="content-subtitle" style="text-align:center;margin:0 auto;">Test your understanding of social engineering, encryption, passwords, and modern threats.</p>
                     <div class="quiz-meta">
                         <span class="quiz-meta-item">⏱️ ~5 minutes</span>
                         <span class="quiz-meta-item">🧠 15 Questions</span>
@@ -205,10 +198,10 @@
     <script>
     const QUIZ_QUESTIONS = [
         {
-            q: "What is phishing?",
+            q: "What is social engineering?",
             opts: ["A technique to crack passwords using brute force", "A social engineering attack that tricks users into revealing sensitive information", "A type of malware that encrypts your files", "An attack that intercepts network traffic"],
             correct: 1,
-            explain: "Phishing uses deceptive emails, messages, or websites to trick victims into providing credentials or personal data. It's the most common cyberattack method."
+            explain: "Social engineering exploits human psychology rather than technical vulnerabilities. Tactics include pretexting, baiting, and quid pro quo. The human is always the weakest link."
         },
         {
             q: "Which of the following makes a password most secure?",
@@ -280,7 +273,7 @@
             q: "What is social engineering?",
             opts: ["Using algorithms to build social media platforms", "Manipulating people psychologically to reveal confidential information", "A method to speed up social media loads", "Encrypting data shared on social networks"],
             correct: 1,
-            explain: "Social engineering exploits human psychology rather than technical vulnerabilities. Tactics include pretexting, baiting, quid pro quo, and phishing. The human is always the weakest link."
+            explain: "Social engineering exploits human psychology rather than technical vulnerabilities. Tactics include pretexting, baiting, and quid pro quo. The human is always the weakest link."
         },
         {
             q: "What does GDPR primarily protect?",

@@ -75,12 +75,24 @@ document.addEventListener('DOMContentLoaded', () => {
         section.style.animationDelay = `${index * 0.2}s`;
     });
 
-    // Add active class to current nav link
+    // Add active class to current sidebar nav link
     const currentLocation = window.location.pathname.split('/').pop() || 'index.html';
-    const navLinks = document.querySelectorAll('nav ul li a');
-    navLinks.forEach(link => {
-        if (link.getAttribute('href') === currentLocation) {
-            link.classList.add('nav-active');
+    
+    // Handle sidebar links
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    sidebarLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href.split('/').pop() === currentLocation) {
+            link.classList.add('active');
+        }
+    });
+    
+    // Also check direct links
+    const directLinks = document.querySelectorAll('.sidebar-bottom .sidebar-link, .sidebar-sign-in-btn');
+    directLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href.split('/').pop() === currentLocation) {
+            link.classList.add('active');
         }
     });
 
@@ -173,22 +185,47 @@ window.toggleSidebar = function() {
 };
 
 window.navigateToTool = function(toolId) {
-    // 1. Set persistence so it opens if we redirect
+    // Set persistence 
     localStorage.setItem('autoOpenSim', toolId);
     
-    // 2. Determine if we should redirect or just open
-    const isServicesPage = window.location.pathname.includes('services.html');
+    console.log('Opening tool:', toolId);
     
-    if (isServicesPage && window.openSimulator) {
+    // Open tool directly
+    if (typeof window.openSimulator === 'function') {
         window.openSimulator(toolId);
-        // If mobile, close sidebar
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && sidebar.classList.contains('mobile-open')) {
-            window.toggleSidebar();
-        }
     } else {
-        // Redirect to services.html
-        window.location.href = 'services.html';
+        // Fallback: create modal directly
+        // Clear any existing modal
+        const existing = document.querySelector('.modal-overlay');
+        if (existing) {
+            existing.remove();
+        }
+        
+        // Create modal element
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.id = 'service-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <button class="close-btn" id="close-service-modal">&times;</button>
+                <div style="text-align:center;padding:2rem;">
+                    <h2 class="sim-title">${toolId.charAt(0).toUpperCase() + toolId.slice(1).replace('_', ' ')}</h2>
+                    <p style="color:rgba(255,255,255,0.5);margin-top:1rem;">Tool loading...</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Add close handler
+        document.getElementById('close-service-modal').onclick = function() {
+            document.getElementById('service-modal').classList.add('hidden');
+        };
+        
+        // Show modal
+        setTimeout(function() {
+            var m = document.getElementById('service-modal');
+            if (m) m.classList.remove('hidden');
+        }, 100);
     }
 };
 
@@ -235,13 +272,154 @@ window.openSimulator = function(serviceType) {
         `;
     } else if (serviceType === 'password') {
         contentHTML = `
-            <h2 class="sim-title" data-en="Smart Password Guardian" data-hi="स्मार्ट पासवर्ड गार्डियन">Smart Password Guardian</h2>
-            <p data-en="Test your password strength in real-time." data-hi="वास्तविक समय में अपनी पासवर्ड शक्ति का परीक्षण करें।">Test your password strength in real-time.</p>
-            <input type="password" id="sim-pass-input" class="sim-input" placeholder="Enter a password to test..." onkeyup="checkPasswordStrength()">
-            <div id="sim-results" class="sim-results">
-                <p><strong>Strength:</strong> <span id="pass-strength">Awaiting input...</span></p>
-                <div id="sim-progress" class="sim-progress-bar" style="display:block;"><div id="sim-progress-fill" class="sim-progress-fill" style="width:0%; background:#e2e8f0;"></div></div>
-                <p style="margin-top:0.5rem; font-size:0.9rem;" id="pass-feedback"></p>
+            <div class="security-tool-header">
+                <div class="security-tool-icon-wrap password">🔐</div>
+                <div class="security-tool-title-group">
+                    <div class="security-tool-title" data-en="Smart Password Guardian" data-hi="स्मार्ट पासवर्ड गार्डियन">Smart Password Guardian</div>
+                    <div class="security-tool-subtitle" data-en="Real-time strength analysis + breach detection" data-hi="रीयल-टाइम स्ट्रेंग्थ एनालिसिस + ब्रीच डिटेक्शन">Real-time strength analysis + breach detection</div>
+                </div>
+            </div>
+            
+            <div class="security-tool-section">
+                <div class="security-tool-section-title">
+                    <span class="step-num">⚡</span>
+                    <span data-en="Password Strength Test" data-hi="पासवर्ड स्ट्रेंग्थ टेस्ट">Password Strength Test</span>
+                </div>
+                <p style="color:rgba(255,255,255,0.5); margin-bottom:1.25rem; font-size:0.95rem;" data-en="Test your password strength in real-time with visual feedback." data-hi="विज़ुअल फीडबैक के साथ वास्तविक समय में अपने पासवर्ड की ताकत का परीक्षण करें।">Test your password strength in real-time with visual feedback.</p>
+                
+                <div class="security-input-group">
+                    <input type="password" id="sim-pass-input" class="sim-input" placeholder=" " onkeyup="checkPasswordStrength()">
+                    <label class="security-input-label" data-en="Enter a password to test..." data-hi="परीक्षण के लिए पासवर्ड दर्ज करें...">Enter a password to test...</label>
+                </div>
+                
+                <div id="pass-strength-display" style="margin-top:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <span style="color:rgba(255,255,255,0.6); font-size:0.9rem;" data-en="Strength:" data-hi="ताकत:">Strength:</span>
+                        <span id="pass-strength" style="font-weight:700; font-size:0.95rem;">—</span>
+                    </div>
+                    <div class="security-strength-meter">
+                        <div id="sim-progress-fill" class="security-strength-fill" style="width:0%;"></div>
+                    </div>
+                    <p style="margin-top:0.75rem; font-size:0.9rem; color:rgba(255,255,255,0.5);" id="pass-feedback"></p>
+                </div>
+                
+                <div class="security-check-list">
+                    <div class="security-check-item" id="check-length">
+                        <span class="security-check-icon">✓</span>
+                        <span data-en="8+ characters" data-hi="8+ अक्षर">8+ characters</span>
+                    </div>
+                    <div class="security-check-item" id="check-upper">
+                        <span class="security-check-icon">✓</span>
+                        <span data-en="Uppercase letter" data-hi="अपरकेस अक्षर">Uppercase</span>
+                    </div>
+                    <div class="security-check-item" id="check-number">
+                        <span class="security-check-icon">✓</span>
+                        <span data-en="Number" data-hi="नंबर">Number</span>
+                    </div>
+                    <div class="security-check-item" id="check-symbol">
+                        <span class="security-check-icon">✓</span>
+                        <span data-en="Symbol (!@#$%)" data-hi="सिंबल (!@#$%)">Symbol</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="security-divider">
+                <span data-en="OR" data-hi="या">OR</span>
+            </div>
+            
+            <div class="security-tool-section">
+                <div class="security-tool-section-title">
+                    <span class="step-num">🛡️</span>
+                    <span data-en="Breach Check" data-hi="ब्रीच चेक">Breach Check</span>
+                </div>
+                <p style="color:rgba(255,255,255,0.5); margin-bottom:1.25rem; font-size:0.95rem;" data-en="Check if your password has appeared in known data breaches. Privacy-safe — only a partial hash is sent." data-hi="जांचें कि आपका पासवर्ड ज्ञात डेटा उल्लंघनों में दिखाई दिया है या निजता-सुरक्षित — केवल आंशिक हैश भेजा जाता है।">Check if your password has appeared in known data breaches. Privacy-safe — only a partial hash is sent.</p>
+                
+                <div style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.15); border-radius:12px; padding:1rem; margin-bottom:1.25rem;">
+                    <div style="display:flex; align-items:center; gap:0.75rem;">
+                        <span style="font-size:1.25rem;">🔒</span>
+                        <div>
+                            <strong style="color:#fff; font-size:0.9rem;">k-Anonymity</strong>
+                            <p style="color:rgba(255,255,255,0.4); font-size:0.8rem; margin:0;">Only first 5 chars of SHA-1 hash sent. Your password never leaves your device.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="security-input-group">
+                    <input type="password" id="sim-breach-pass" class="sim-input" placeholder=" " autocomplete="new-password">
+                    <label class="security-input-label" data-en="Enter password to check breaches..." data-hi="उल्लंघन जांचने के लिए पासवर्ड दर्ज करें...">Enter password to check breaches...</label>
+                </div>
+                
+                <button class="sim-btn" style="margin-top:0.5rem;" onclick="checkBreach()">
+                    <span data-en="Check Against Known Breaches" data-hi="ज्ञात उल्लंघनों के विरुद्ध जांचें">Check Against Known Breaches</span>
+                </button>
+                
+                <div id="breach-results" class="hidden" style="margin-top:1rem;"></div>
+            </div>
+        `;
+    } else if (serviceType === 'fraud') {
+        contentHTML = `
+            <div class="security-tool-header">
+                <div class="security-tool-icon-wrap fraud">🕵️</div>
+                <div class="security-tool-title-group">
+                    <div class="security-tool-title" data-en="Fraud Detection" data-hi="फ्रॉड डिटेक्शन">Fraud Detection</div>
+                    <div class="security-tool-subtitle" data-en="Transaction pattern analysis & risk scoring" data-hi="ट्रांज़ैक्शन पैटर्न एनालिसिस और रिस्क स्कोरिंग">Transaction pattern analysis & risk scoring</div>
+                </div>
+            </div>
+            
+            <div class="security-tool-section">
+                <div class="security-tool-section-title">
+                    <span class="step-num">💳</span>
+                    <span data-en="Analyze Transaction" data-hi="ट्रांज़ैक्शन का विश्लेषण करें">Analyze Transaction</span>
+                </div>
+                <p style="color:rgba(255,255,255,0.5); margin-bottom:1.25rem; font-size:0.95rem;" data-en="Enter transaction details to check for fraud indicators and risk factors." data-hi="फ्रॉड संकेतकों और जोखिम कारकों की जांच के लिए ट्रांज़ैक्शन विवरण दर्ज करें।">Enter transaction details to check for fraud indicators and risk factors.</p>
+                
+                <div class="security-input-group">
+                    <input type="number" id="sim-fraud-amt" class="sim-input" placeholder=" ">
+                    <label id="fraud-amt-label" class="security-input-label" data-en="Transaction amount (USD)..." data-hi="ट्रांज़ैक्शन राशि (USD)...">Transaction amount (USD)...</label>
+                </div>
+                
+                <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem; font-size:0.85rem; color:rgba(255,255,255,0.6);">
+                    <span>🌍</span>
+                    <span data-en="Transaction origin country" data-hi="ट्रांज़ैक्शन मूल देश">Transaction origin country</span>
+                </label>
+                <select id="sim-fraud-country" class="security-select" onchange="updateCurrencyLabel()">
+                    <option value="US">🇺🇸 United States</option>
+                    <option value="UK">🇬🇧 United Kingdom</option>
+                    <option value="DE">🇩🇪 Germany</option>
+                    <option value="CA">🇨🇦 Canada</option>
+                    <option value="AU">🇦🇺 Australia</option>
+                    <option value="IN">🇮🇳 India</option>
+                    <option value="CN">🇨🇳 China</option>
+                    <option value="RU">🇷🇺 Russia</option>
+                    <option value="BR">🇧🇷 Brazil</option>
+                    <option value="NG">🇳🇬 Nigeria</option>
+                </select>
+                
+                <button class="sim-btn" style="margin-top:0.5rem;" onclick="runFraudScan()">
+                    <span data-en="Analyze for Fraud" data-hi="फ्रॉड के लिए विश्लेषण करें">Analyze for Fraud</span>
+                </button>
+                
+                <div id="fraud-progress" class="sim-progress-bar" style="display:none; margin-top:1rem;"><div id="fraud-progress-fill" class="sim-progress-fill"></div></div>
+                <div id="fraud-results" class="hidden" style="margin-top:1rem;"></div>
+            </div>
+            
+            <div class="security-tool-section" style="margin-top:1.5rem;">
+                <div class="security-tool-section-title">
+                    <span class="step-num">📊</span>
+                    <span data-en="Risk Indicators" data-hi="जोखिम संकेतक">Risk Indicators</span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:1rem;">
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:1rem; text-align:center;">
+                        <div style="font-size:1.5rem; margin-bottom:0.25rem;">🌍</div>
+                        <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.5px;">Geo Mismatch</div>
+                        <div style="font-size:0.85rem; color:#fff; margin-top:0.25rem;" data-en="Non-US origin" data-hi="गैर-यूएस मूल">Non-US origin</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:1rem; text-align:center;">
+                        <div style="font-size:1.5rem; margin-bottom:0.25rem;">💵</div>
+                        <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.5px;">Amount</div>
+                        <div style="font-size:0.85rem; color:#fff; margin-top:0.25rem;" data-en="Over $10,000" data-hi="$10,000 से अधिक">Over $10,000</div>
+                    </div>
+                </div>
             </div>
         `;
     } else if (serviceType === 'blockchain') {
@@ -269,26 +447,70 @@ window.openSimulator = function(serviceType) {
         `;
     } else if (serviceType === 'vault') {
         contentHTML = `
-            <h2 class="sim-title" data-en="File Encryption Tool" data-hi="फ़ाइल एन्क्रिप्शन टूल">File Encryption Tool</h2>
-            
-            <div style="margin-bottom: 2rem;">
-                <h3 style="color:#f7fafc; margin-bottom:0.5rem; font-size:1.2rem;">Step 1: Lock a File</h3>
-                <p style="color:#a0aec0; margin-bottom:1rem; font-size:0.95rem;">Select any file and set a strong password to encrypt it. The file will be downloaded as a secure .papyrus blob.</p>
-                <input type="file" id="sim-encrypt-file" class="sim-input sim-file-btn" style="padding:0.5rem; margin-bottom:0.8rem;">
-                <input type="password" id="sim-encrypt-pass" class="sim-input" placeholder="Set a strong encryption password...">
-                <button class="sim-btn" style="margin-bottom:0;" onclick="encryptVaultFile()">Encrypt & Download (.papyrus)</button>
-                <div id="sim-progress-encrypt" class="sim-progress-bar" style="margin-top:1rem;"><div id="sim-progress-fill-encrypt" class="sim-progress-fill"></div></div>
-                <div id="sim-results-encrypt" class="sim-results hidden" style="margin-top:1rem; display:none;"></div>
+            <div class="security-tool-header">
+                <div class="security-tool-icon-wrap vault">🔒</div>
+                <div class="security-tool-title-group">
+                    <div class="security-tool-title" data-en="File Encryption Vault" data-hi="फ़ाइल एन्क्रिप्शन वॉल्ट">File Encryption Vault</div>
+                    <div class="security-tool-subtitle" data-en="AES-256-GCM military-grade encryption" data-hi="AES-256-GCM सैन्य-ग्रेड एन्क्रिप्शन">AES-256-GCM military-grade encryption</div>
+                </div>
             </div>
-
-            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
-                <h3 style="color:#f7fafc; margin-bottom:0.5rem; font-size:1.2rem;">Step 2: Unlock a File</h3>
-                <p style="color:#a0aec0; margin-bottom:1rem; font-size:0.95rem;">Upload a encrypted .papyrus file and enter the original password to unlock and restore it.</p>
-                <input type="file" id="sim-decrypt-file" class="sim-input sim-file-btn" style="padding:0.5rem; margin-bottom:0.8rem;" accept=".papyrus">
-                <input type="password" id="sim-decrypt-pass" class="sim-input" placeholder="Enter the exact decryption password...">
-                <button class="sim-btn" style="margin-bottom:0;" onclick="decryptVaultFile()">Decrypt & Download Original</button>
-                <div id="sim-progress-decrypt" class="sim-progress-bar" style="margin-top:1rem;"><div id="sim-progress-fill-decrypt" class="sim-progress-fill"></div></div>
-                <div id="sim-results-decrypt" class="sim-results hidden" style="margin-top:1rem; display:none;"></div>
+            
+            <div class="security-tool-section">
+                <div class="security-tool-section-title">
+                    <span class="step-num">1</span>
+                    <span data-en="Lock a File" data-hi="फ़ाइल लॉक करें">Lock a File</span>
+                </div>
+                <p style="color:rgba(255,255,255,0.5); margin-bottom:1.25rem; font-size:0.95rem;" data-en="Select any file and set a strong password to encrypt it. The file will be downloaded as a secure .papyrus blob." data-hi="कोई भी फ़ाइल चुनें और इसे एन्क्रिप्ट करने के लिए एक मजबूत पासवर्ड सेट करें। फ़ाइल एक सुरक्षित .papyrus ब्लॉब के रूप में डाउनलोड होगी।">Select any file and set a strong password to encrypt it. The file will be downloaded as a secure .papyrus blob.</p>
+                
+                <div class="security-file-drop" id="encrypt-drop-zone" onclick="document.getElementById('sim-encrypt-file').click()">
+                    <div class="security-file-drop-icon">📁</div>
+                    <div class="security-file-drop-text" data-en="Drop file here or click to browse" data-hi="फ़ाइल यहाँ ड्रॉप करें या ब्राउज़ करने के लिए क्लिक करें">Drop file here or click to browse</div>
+                    <div class="security-file-drop-subtext">PDF, DOCX, TXT, JPG — All formats supported</div>
+                </div>
+                <input type="file" id="sim-encrypt-file" class="hidden" style="display:none;">
+                
+                <div class="security-input-group" style="margin-top:1.25rem;">
+                    <input type="password" id="sim-encrypt-pass" class="sim-input" placeholder=" ">
+                    <label class="security-input-label" data-en="Set encryption password..." data-hi="एन्क्रिप्शन पासवर्ड सेट करें...">Set encryption password...</label>
+                </div>
+                
+                <button class="sim-btn" style="margin-top:0.5rem;" onclick="encryptVaultFile()">
+                    <span data-en="Encrypt & Download (.papyrus)" data-hi="एन्क्रिप्ट और डाउनलोड करें (.papyrus)">Encrypt & Download (.papyrus)</button>
+                </button>
+                
+                <div id="sim-progress-encrypt" class="sim-progress-bar" style="display:none; margin-top:1rem;"><div id="sim-progress-fill-encrypt" class="sim-progress-fill"></div></div>
+                <div id="sim-results-encrypt" class="hidden" style="margin-top:1rem;"></div>
+            </div>
+            
+            <div class="security-divider">
+                <span data-en="OR" data-hi="या">OR</span>
+            </div>
+            
+            <div class="security-tool-section">
+                <div class="security-tool-section-title">
+                    <span class="step-num">2</span>
+                    <span data-en="Unlock a File" data-hi="फ़ाइल अनलॉक करें">Unlock a File</span>
+                </div>
+                <p style="color:rgba(255,255,255,0.5); margin-bottom:1.25rem; font-size:0.95rem;" data-en="Upload an encrypted .papyrus file and enter the original password to unlock and restore it." data-hi="एक एन्क्रिप्टेड .papyrus फ़ाइल अपलोड करें और इसे अनलॉक करने और पुनर्स्थापित करने के लिए मूल पासवर्ड दर्ज करें।">Upload an encrypted .papyrus file and enter the original password to unlock and restore it.</p>
+                
+                <div class="security-file-drop" id="decrypt-drop-zone" onclick="document.getElementById('sim-decrypt-file').click()">
+                    <div class="security-file-drop-icon">🔐</div>
+                    <div class="security-file-drop-text" data-en="Drop encrypted .papyrus file" data-hi="एन्क्रिप्टेड .papyrus फ़ाइल ड्रॉप करें">Drop encrypted .papyrus file</div>
+                    <div class="security-file-drop-subtext">.papyrus files only</div>
+                </div>
+                <input type="file" id="sim-decrypt-file" class="hidden" style="display:none;" accept=".papyrus">
+                
+                <div class="security-input-group" style="margin-top:1.25rem;">
+                    <input type="password" id="sim-decrypt-pass" class="sim-input" placeholder=" ">
+                    <label class="security-input-label" data-en="Enter decryption password..." data-hi="डिक्रिप्शन पासवर्ड दर्ज करें...">Enter decryption password...</label>
+                </div>
+                
+                <button class="sim-btn" style="margin-top:0.5rem;" onclick="decryptVaultFile()">
+                    <span data-en="Decrypt & Download Original" data-hi="डिक्रिप्ट और ओरिजिनल डाउनलोड करें">Decrypt & Download Original</button>
+                </button>
+                
+                <div id="sim-progress-decrypt" class="sim-progress-bar" style="display:none; margin-top:1rem;"><div id="sim-progress-fill-decrypt" class="sim-progress-fill"></div></div>
+                <div id="sim-results-decrypt" class="hidden" style="margin-top:1rem;"></div>
             </div>
         `;
     } else if (serviceType === 'ai_threat') {
@@ -314,50 +536,37 @@ window.openSimulator = function(serviceType) {
         `;
     } else if (serviceType === 'dlp') {
         contentHTML = `
-            <h2 class="sim-title" data-en="Data Leakage Prevention" data-hi="डेटा रिसाव रोकथाम">Data Leakage Prevention</h2>
-            <p data-en="Analyze outgoing text for sensitive information (PII, SSN, Credit Cards)." data-hi="संवेदनशील जानकारी के लिए आउटगोइंग टेक्स्ट का विश्लेषण करें।">Analyze outgoing text for sensitive information (PII, SSN, Credit Cards).</p>
-            <textarea id="sim-dlp-input" class="sim-input" rows="5" placeholder="Hi team, my new phone number is 555-0198 and my card details are 4532 1122 8890 0011."></textarea>
-            <button class="sim-btn" onclick="runDLPScan()">Inspect Payload</button>
-            <div id="sim-progress" class="sim-progress-bar"><div id="sim-progress-fill" class="sim-progress-fill"></div></div>
-            <div id="sim-results" class="sim-results hidden" style="margin-top:1rem; display:none;"></div>
-        `;
-    } else if (serviceType === 'api_management') {
-        contentHTML = `
-            <h2 class="sim-title" data-en="Secure API Management" data-hi="सुरक्षित एपीआई प्रबंधन">Secure API Management</h2>
-            <p data-en="Manage and safely rotate your API keys." data-hi="अपनी एपीआई कुंजियों को प्रबंधित और सुरक्षित रूप से घुमाएं।">Manage and safely rotate your API keys.</p>
-            <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:1.5rem; margin-bottom:1rem; text-align:center;">
-                <p style="color:#a0aec0; font-size:0.85rem; margin-bottom:0.5rem;">Current Production Key (Hidden)</p>
-                <div style="font-family:monospace; font-size:1.2rem; color:#fff; background:#000; padding:0.5rem; border-radius:5px; margin-bottom:1rem; letter-spacing:3px;">
-                    ************************
-                </div>
-                <div style="display:flex; justify-content:center; gap:1rem;">
-                    <span class="badge-warning sim-badge" style="margin:0;">Risk: Medium (90 days old)</span>
+            <div class="security-tool-header">
+                <div class="security-tool-icon-wrap dlp">🚫</div>
+                <div class="security-tool-title-group">
+                    <div class="security-tool-title" data-en="Data Leakage Prevention" data-hi="डेटा रिसाव रोकथाम">Data Leakage Prevention</div>
+                    <div class="security-tool-subtitle" data-en="Detect and redact sensitive information in text" data-hi="टेक्स्ट में संवेदनशील जानकारी का पता लगाएं और हटाएं">Detect and redact sensitive information in text</div>
                 </div>
             </div>
-            <button class="sim-btn" onclick="runAPIRotation()">Rotate Key & Update Vault</button>
-            <div id="sim-progress" class="sim-progress-bar"><div id="sim-progress-fill" class="sim-progress-fill"></div></div>
-            <div id="sim-results" class="sim-results hidden" style="margin-top:1rem; display:none;"></div>
-        `;
-    } else if (serviceType === 'fraud') {
-        contentHTML = `
-            <h2 class="sim-title" data-en="Fraud Detection" data-hi="धोखाधड़ी की पहचान">Fraud Detection</h2>
-            <p data-en="Evaluate a transaction risk score in real-time." data-hi="वास्तविक समय में लेन-देन जोखिम स्कोर का मूल्यांकन करें।">Evaluate a transaction risk score in real-time.</p>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-                <input type="number" id="sim-fraud-amt" class="sim-input" placeholder="Amount (USD)" style="margin:0;" min="0">
-                <select id="sim-fraud-country" class="sim-input" style="margin:0; padding:0.9rem; background:#0d0f1a; color:#fff;">
-                    <option value="US" style="background:#0d0f1a;">United States (Profile Default)</option>
-                    <option value="UK" style="background:#0d0f1a;">United Kingdom</option>
-                    <option value="NG" style="background:#0d0f1a;">Nigeria</option>
-                    <option value="RU" style="background:#0d0f1a;">Russia</option>
-                    <option value="CN" style="background:#0d0f1a;">China</option>
-                    <option value="BR" style="background:#0d0f1a;">Brazil</option>
-                </select>
+            
+            <div class="security-tool-section">
+                <div class="security-tool-section-title">
+                    <span class="step-num">🔍</span>
+                    <span data-en="Scan Your Content" data-hi="अपनी सामग्री स्कैन करें">Scan Your Content</span>
+                </div>
+                <p style="color:rgba(255,255,255,0.5); margin-bottom:1.25rem; font-size:0.95rem;" data-en="Analyze outgoing text for sensitive information (PII, SSN, Credit Cards, Phone Numbers)." data-hi="संवेदनशील जानकारी के लिए आउटगोइंग टेक्स्ट का विश्लेषण करें (PII, SSN, क्रेडिट कार्ड, फ़ोन नंबर)।">Analyze outgoing text for sensitive information (PII, SSN, Credit Cards, Phone Numbers).</p>
+                
+                <div class="security-scan-animation">
+                    <div class="security-scan-radar"></div>
+                    <div class="security-scan-line"></div>
+                </div>
+                
+                <textarea id="sim-dlp-input" class="sim-input" rows="5" placeholder="Hi team, my new phone number is 555-0198 and my card details are 4532 1122 8890 0011." style="min-height:140px; resize:none;"></textarea>
+                
+                <button class="sim-btn" onclick="runDLPScan()">
+                    <span data-en="Inspect Payload" data-hi="पेलोड का निरीक्षण करें">Inspect Payload</button>
+                </button>
+                
+                <div id="sim-progress" class="sim-progress-bar"><div id="sim-progress-fill" class="sim-progress-fill"></div></div>
+                <div id="sim-results" class="hidden" style="margin-top:1rem;"></div>
             </div>
-            <button class="sim-btn" onclick="runFraudScan()">Evaluate Risk Score</button>
-            <div id="sim-progress" class="sim-progress-bar"><div id="sim-progress-fill" class="sim-progress-fill"></div></div>
-            <div id="sim-results" class="sim-results hidden" style="margin-top:1rem; display:none;"></div>
         `;
-    } else if (serviceType === 'privacy_ai') {
+} else if (serviceType === 'federated') {
         contentHTML = `
             <h2 class="sim-title" data-en="Privacy-Preserving AI" data-hi="गोपनीयता-संरक्षण एआई">Privacy-Preserving AI</h2>
             <p data-en="Train a model locally using Federated Learning. Your raw data never leaves the device." data-hi="फेडरेटेड लर्निंग का उपयोग करके स्थानीय रूप से मॉडल को प्रशिक्षित करें।">Train a model locally using Federated Learning. Your raw data never leaves the device.</p>
@@ -472,11 +681,45 @@ window.checkPasswordStrength = function() {
     const strengthText = document.getElementById('pass-strength');
     const feedback = document.getElementById('pass-feedback');
     const fill = document.getElementById('sim-progress-fill');
+    const checkLength = document.getElementById('check-length');
+    const checkUpper = document.getElementById('check-upper');
+    const checkNumber = document.getElementById('check-number');
+    const checkSymbol = document.getElementById('check-symbol');
+    
+    if(checkLength) {
+        if(val.length >= 8) {
+            checkLength.classList.add('met');
+        } else {
+            checkLength.classList.remove('met');
+        }
+    }
+    if(checkUpper) {
+        if(/[A-Z]/.test(val)) {
+            checkUpper.classList.add('met');
+        } else {
+            checkUpper.classList.remove('met');
+        }
+    }
+    if(checkNumber) {
+        if(/[0-9]/.test(val)) {
+            checkNumber.classList.add('met');
+        } else {
+            checkNumber.classList.remove('met');
+        }
+    }
+    if(checkSymbol) {
+        if(/[^A-Za-z0-9]/.test(val)) {
+            checkSymbol.classList.add('met');
+        } else {
+            checkSymbol.classList.remove('met');
+        }
+    }
     
     if(!val) {
-        strengthText.innerText = "Awaiting input...";
+        strengthText.innerText = "—";
+        strengthText.style.color = 'rgba(255,255,255,0.4)';
         fill.style.width = '0%';
-        fill.style.background = '#e2e8f0';
+        fill.className = 'security-strength-fill';
         feedback.innerText = '';
         return;
     }
@@ -489,19 +732,22 @@ window.checkPasswordStrength = function() {
     if(/[^A-Za-z0-9]/.test(val)) strength += 1;
     
     if(strength <= 2) {
-        strengthText.innerHTML = "<span style='color:#e53e3e; font-weight:bold;'>Weak</span>";
+        strengthText.innerText = "Weak";
+        strengthText.style.color = '#f87171';
         fill.style.width = '33%';
-        fill.style.background = '#fc8181';
+        fill.className = 'security-strength-fill weak';
         feedback.innerText = "Too easy to guess. Try adding numbers, special characters, or increasing length.";
     } else if (strength <= 4) {
-        strengthText.innerHTML = "<span style='color:#d69e2e; font-weight:bold;'>Moderate</span>";
+        strengthText.innerText = "Moderate";
+        strengthText.style.color = '#fbbf24';
         fill.style.width = '66%';
-        fill.style.background = '#f6e05e';
+        fill.className = 'security-strength-fill medium';
         feedback.innerText = "Good, but could be stronger. Consider using a longer passphrase.";
     } else {
-        strengthText.innerHTML = "<span style='color:#38a169; font-weight:bold;'>Strong</span>";
+        strengthText.innerText = "Strong";
+        strengthText.style.color = '#4ade80';
         fill.style.width = '100%';
-        fill.style.background = '#68d391';
+        fill.className = 'security-strength-fill strong';
         feedback.innerText = "Excellent! This password is highly resistant to brute-force attacks.";
     }
 }
@@ -879,13 +1125,17 @@ window.runDLPScan = async function() {
     const progressFill = document.getElementById('sim-progress-fill');
     const results = document.getElementById('sim-results');
     
-    if(!input.trim()) return;
+    if(!input.trim()) {
+        results.style.display = 'block';
+        results.innerHTML = `<div class="security-result-card warning"><p style="margin:0;">Please enter some text to scan.</p></div>`;
+        return;
+    }
     
     progress.style.display = 'block';
     results.style.display = 'none';
+    results.classList.add('hidden');
     progressFill.style.width = '0%';
     
-
     _runDLPHeuristic(input);
 }
 
@@ -901,15 +1151,50 @@ function _runDLPHeuristic(input) {
             const cardRegex = /\b(?:\d[ -]*?){13,16}\b/;
             const ssnRegex = /\b\d{3}-\d{2}-\d{4}\b/;
             const phoneRegex = /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b|\b\d{3}-\d{4}\b/;
+            const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
             let flags = [];
-            if(cardRegex.test(input)) flags.push('Credit Card Number');
-            if(ssnRegex.test(input)) flags.push('Social Security Number');
-            if(phoneRegex.test(input)) flags.push('Phone Number');
-            results.style.display = 'block';
+            let foundCards = [];
+            
+            if(cardRegex.test(input)) {
+                flags.push('credit-card');
+                const cardMatches = input.match(/\b(?:\d[ -]*?){13,16}\b/g);
+                if(cardMatches) foundCards = cardMatches.slice(0,3);
+            }
+            if(ssnRegex.test(input)) flags.push('ssn');
+            if(phoneRegex.test(input)) flags.push('phone');
+            if(emailRegex.test(input)) flags.push('email');
+            
+            results.classList.remove('hidden');
+            
             if(flags.length > 0) {
-                results.innerHTML = `<div class="badge-danger sim-badge">🚫 Blocked — PII Detected!</div><p>Policy Violation: <strong>${flags.join(', ')}</strong>.</p><p style="font-size:0.85rem;margin-top:0.5rem;color:#f87171;">Data transfer aborted.</p>`;
+                let tagsHTML = '';
+                if(flags.includes('credit-card')) tagsHTML += '<span class="security-tag credit-card">💳 Credit Card</span>';
+                if(flags.includes('ssn')) tagsHTML += '<span class="security-tag ssn">🆔 SSN</span>';
+                if(flags.includes('phone')) tagsHTML += '<span class="security-tag phone">📱 Phone</span>';
+                if(flags.includes('email')) tagsHTML += '<span class="security-tag email">✉️ Email</span>';
+                
+                results.innerHTML = `
+                    <div class="security-result-card danger">
+                        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                            <span style="font-size:1.5rem;">🚫</span>
+                            <span style="font-size:1.1rem; font-weight:700; color:#f87171;">PII Detected — Blocked</span>
+                        </div>
+                        <div class="security-tags">${tagsHTML}</div>
+                        <p style="margin-top:1rem; margin-bottom:0.5rem; line-height:1.6;">Policy Violation: <strong>${flags.length}</strong> sensitive data type${flags.length>1?'s':''} detected.</p>
+                        <p style="font-size:0.9rem; color:#f87171;">Data transfer has been blocked for review.</p>
+                    </div>
+                `;
             } else {
-                results.innerHTML = `<div class="badge-safe sim-badge">✅ Cleared — No PII Found</div><p>Content complies with DLP policies. Allowed to send.</p>`;
+                results.innerHTML = `
+                    <div class="security-result-card safe">
+                        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                            <span style="font-size:1.5rem;">✅</span>
+                            <span style="font-size:1.1rem; font-weight:700; color:#4ade80;">Cleared — No PII Found</span>
+                        </div>
+                        <p style="margin-bottom:0.5rem; line-height:1.6;">Content complies with DLP policies. Safe to transmit.</p>
+                        <p style="font-size:0.85rem; color:rgba(255,255,255,0.4); margin:0;">No credit card numbers, SSN, or phone numbers detected.</p>
+                    </div>
+                `;
             }
         }
     }, 60);
@@ -945,20 +1230,36 @@ window.runAPIRotation = function() {
     }, 80);
 }
 
+window.updateCurrencyLabel = function() {
+    const country = document.getElementById('sim-fraud-country').value;
+    const label = document.getElementById('fraud-amt-label');
+    const currencyMap = {
+        'US': 'USD', 'UK': 'GBP', 'DE': 'EUR', 'CA': 'CAD',
+        'AU': 'AUD', 'IN': 'INR', 'CN': 'CNY', 'RU': 'RUB',
+        'BR': 'BRL', 'NG': 'NGN'
+    };
+    const currency = currencyMap[country] || 'USD';
+    label.textContent = `Transaction amount (${currency})...`;
+    label.setAttribute('data-en', `Transaction amount (${currency})...`);
+    label.setAttribute('data-hi', `ट्रांज़ैक्शन राशि (${currency})...`);
+}
+
 window.runFraudScan = function() {
     const amt = parseFloat(document.getElementById('sim-fraud-amt').value);
     const country = document.getElementById('sim-fraud-country').value;
-    const progress = document.getElementById('sim-progress');
-    const progressFill = document.getElementById('sim-progress-fill');
-    const results = document.getElementById('sim-results');
+    const progress = document.getElementById('fraud-progress');
+    const progressFill = document.getElementById('fraud-progress-fill');
+    const results = document.getElementById('fraud-results');
     
     if(isNaN(amt)) {
-        alert("Enter a valid amount.");
+        results.style.display = 'block';
+        results.innerHTML = `<div class="security-result-card warning"><p style="margin:0;">Please enter a valid amount.</p></div>`;
         return;
     }
     
     progress.style.display = 'block';
     results.style.display = 'none';
+    results.classList.add('hidden');
     progressFill.style.width = '0%';
     
     let width = 0;
@@ -969,26 +1270,67 @@ window.runFraudScan = function() {
             clearInterval(interval);
             
             let isSuspicious = false;
-            let reason = "";
+            let riskScore = 0;
+            let reasons = [];
+            
             if(country !== "US") {
                 isSuspicious = true;
-                reason = "IP localization differs from user's primary residence (US).";
-            } else if(amt > 10000) {
+                riskScore += 45;
+                reasons.push("Non-US transaction origin");
+            }
+            if(amt > 10000) {
                 isSuspicious = true;
-                reason = "Transaction amount drastically exceeds historical baseline averages.";
+                riskScore += 45;
+                reasons.push("Amount exceeds $10,000 threshold");
+            }
+            if(amt > 1000 && amt <= 10000) {
+                riskScore += 20;
             }
             
-            results.style.display = 'block';
-            if(isSuspicious) {
-                 results.innerHTML = `
-                    <div class="badge-warning sim-badge">Transaction Held (Fraud Score: 88/100)</div>
-                    <p>This transaction has been flagged for manual review.</p>
-                    <p style="font-size:0.85rem; margin-top:0.5rem; color:#fbbf24;">Reason: ${reason}</p>
+            const finalScore = Math.min(99, 12 + riskScore);
+            
+            results.classList.remove('hidden');
+            
+            if(isSuspicious || finalScore > 50) {
+                const cardClass = finalScore > 75 ? 'danger' : 'warning';
+                const icon = finalScore > 75 ? '🚨' : '⚠️';
+                const label = finalScore > 75 ? 'High Risk — Blocked' : 'Suspicious — Review Required';
+                
+                let reasonHTML = reasons.map(r => `<div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;"><span style="color:#fbbf24;">•</span><span>${r}</span></div>`).join('');
+                
+                results.innerHTML = `
+                    <div class="security-result-card ${cardClass}">
+                        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                            <span style="font-size:1.5rem;">${icon}</span>
+                            <span style="font-size:1.1rem; font-weight:700; color:${finalScore > 75 ? '#f87171' : '#fbbf24'};">${label}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                            <div style="flex:1;">
+                                <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.25rem;">Fraud Score</div>
+                                <div style="font-size:2rem; font-weight:800; color:${finalScore > 75 ? '#f87171' : '#fbbf24'};">${finalScore}<span style="font-size:1rem; color:rgba(255,255,255,0.4);">/100</span></div>
+                            </div>
+                        </div>
+                        <p style="margin-bottom:0.5rem; font-weight:600;">Risk Factors Detected:</p>
+                        ${reasonHTML}
+                        <p style="margin-top:1rem; font-size:0.85rem; color:rgba(255,255,255,0.5);">This transaction has been flagged for manual review.</p>
+                    </div>
                 `;
             } else {
                 results.innerHTML = `
-                    <div class="badge-safe sim-badge">Approved (Fraud Score: 12/100)</div>
-                    <p>Transaction is consistent with user velocity and geographic profile.</p>
+                    <div class="security-result-card safe">
+                        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                            <span style="font-size:1.5rem;">✅</span>
+                            <span style="font-size:1.1rem; font-weight:700; color:#4ade80;">Approved — Low Risk</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                            <div style="flex:1;">
+                                <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.25rem;">Fraud Score</div>
+                                <div style="font-size:2rem; font-weight:800; color:#4ade80;">${finalScore}<span style="font-size:1rem; color:rgba(255,255,255,0.4);">/100</span></div>
+                            </div>
+                        </div>
+                        <p style="margin-bottom:0.5rem; line-height:1.6;">Transaction is consistent with user profile and history.</p>
+                        <p style="font-size:0.85rem; color:rgba(255,255,255,0.4); margin:0;">No fraud indicators detected.</p>
+                    </div>
                 `;
             }
         }
@@ -1034,128 +1376,63 @@ window.runFederatedTraining = function() {
 }
 
 // ============================================================
-//  PWA — Service Worker Registration & Install Prompt
+//  BREACH CHECK — Button Triggered
 // ============================================================
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('[PWA] SW registered:', reg.scope))
-            .catch(err => console.warn('[PWA] SW failed:', err));
-    });
-}
-let _pwaPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    _pwaPrompt = e;
-    document.querySelectorAll('.pwa-install-btn').forEach(b => b.style.display = 'flex');
-});
-window.installPWA = function() {
-    if (!_pwaPrompt) return;
-    _pwaPrompt.prompt();
-    _pwaPrompt.userChoice.then(() => { _pwaPrompt = null; });
-};
-
-// ============================================================
-//  SCAN HISTORY — localStorage (max 50 entries)
-// ============================================================
-window.saveScanToHistory = function(tool, riskLevel, summary, engine) {
-    try {
-        const scans = JSON.parse(localStorage.getItem('papyrus_scan_history') || '[]');
-        scans.unshift({ tool, riskLevel, summary: (summary||'').substring(0, 120), engine: engine || 'heuristic', timestamp: Date.now() });
-        if (scans.length > 50) scans.length = 50;
-        localStorage.setItem('papyrus_scan_history', JSON.stringify(scans));
-    } catch(e) {}
-};
-window.getScanHistory = function() {
-    try { return JSON.parse(localStorage.getItem('papyrus_scan_history') || '[]'); } catch(e) { return []; }
-};
-window.getSecurityScore = function() {
-    const s = window.getScanHistory();
-    if (!s.length) return 85;
-    let score = 100;
-    s.slice(0, 20).forEach(sc => {
-        if (['critical','ai_generated','block'].includes(sc.riskLevel)) score -= 10;
-        else if (['suspicious','warning'].includes(sc.riskLevel)) score -= 4;
-        else if (['safe','normal','allow'].includes(sc.riskLevel)) score = Math.min(100, score + 1);
-    });
-    return Math.max(30, Math.min(100, score));
-};
-
-// ============================================================
-//  PDF EXPORT — lazy-loaded jsPDF
-// ============================================================
-window._appendExportBtn = function(resultsEl, toolName, riskLevel, summary) {
-    window.saveScanToHistory(toolName, riskLevel, summary);
-    resultsEl.querySelector('.export-btn-row')?.remove();
-    const row = document.createElement('div');
-    row.className = 'export-btn-row';
-    row.style.cssText = 'margin-top:1rem;padding-top:0.85rem;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:0.6rem;flex-wrap:wrap;';
-    const btnStyle = `padding:0.55rem 1rem;border-radius:8px;font-family:Outfit,sans-serif;font-size:0.81rem;font-weight:700;cursor:pointer;transition:all 0.2s;`;
-    row.innerHTML = `
-        <button onclick="window._downloadReport('${toolName}','${riskLevel}')"
-            style="${btnStyle}background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);color:#a5b4fc;"
-            onmouseover="this.style.background='rgba(99,102,241,0.2)'" onmouseout="this.style.background='rgba(99,102,241,0.1)'">📥 Download PDF Report</button>
-    `;
-    resultsEl.appendChild(row);
-};
-
-window._downloadReport = async function(toolName, riskLevel) {
-    if (!window.jspdf) {
-        await new Promise((resolve, reject) => {
-            const s = document.createElement('script');
-            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-            s.onload = resolve; s.onerror = reject;
-            document.head.appendChild(s);
-        });
+window.checkBreach = async function() {
+    const passField = document.getElementById('sim-breach-pass');
+    const pass = passField?.value?.trim();
+    const results = document.getElementById('breach-results');
+    
+    if (!pass) {
+        if(results) {
+            results.style.display = 'block';
+            results.innerHTML = `<div class="security-result-card warning"><p style="margin:0;">Please enter a password to check.</p></div>`;
+        }
+        return;
     }
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const W = 210, margin = 20;
-
-    doc.setFillColor(13, 15, 26); doc.rect(0, 0, W, 297, 'F');
-    doc.setFillColor(20, 22, 40); doc.rect(0, 0, W, 45, 'F');
-
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(255, 255, 255);
-    doc.text('THE PAPYRUS', margin, 22);
-    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(165, 180, 252);
-    doc.text('Cybersecurity Analysis Report', margin, 31);
-    doc.setFontSize(8); doc.setTextColor(100, 100, 130);
-    doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, W - margin, 31, { align: 'right' });
-
-    doc.setDrawColor(99, 102, 241); doc.setLineWidth(0.4); doc.line(margin, 45, W - margin, 45);
-
-    let y = 58;
-    const meta = [
-        ['Tool', toolName], ['Risk Level', riskLevel.toUpperCase()],
-        ['Analysis Engine', 'Heuristic'],
-        ['Date', new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' })]
-    ];
-    meta.forEach(([k, v]) => {
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(165, 180, 252);
-        doc.text(k.toUpperCase(), margin, y);
-        doc.setFont('helvetica', 'normal'); doc.setTextColor(220, 220, 235);
-        doc.text(v, margin + 40, y); y += 8;
-    });
-
-    doc.setDrawColor(50, 52, 80); doc.setLineWidth(0.3); doc.line(margin, y + 2, W - margin, y + 2); y += 12;
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(165, 180, 252);
-    doc.text('Analysis Results', margin, y); y += 8;
-
-    const resultsEl = document.getElementById('sim-results');
-    const rawText = resultsEl ? resultsEl.innerText.replace(/Download PDF Report/gi, '').replace(/\n{3,}/g, '\n\n').trim() : 'No result data.';
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(200, 200, 215);
-    const lines = doc.splitTextToSize(rawText, W - margin * 2);
-    lines.forEach(line => { if (y > 270) { doc.addPage(); doc.setFillColor(13,15,26); doc.rect(0,0,W,297,'F'); y = 20; } doc.text(line, margin, y); y += 5.5; });
-
-    doc.setFontSize(7); doc.setTextColor(70, 70, 100);
-    doc.text('The Papyrus Security Platform · All analysis is for educational purposes only', W / 2, 290, { align: 'center' });
-
-    doc.save(`papyrus-${toolName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}-${Date.now()}.pdf`);
+    
+    results.style.display = 'block';
+    results.innerHTML = `<div style="text-align:center; padding:1rem;"><div class="security-scan-animation" style="height:60px; margin:0 auto 1rem; width:60px;"></div><p style="color:rgba(255,255,255,0.5);">Checking databases...</p></div>`;
+    
+    try {
+        const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(pass));
+        const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').toUpperCase();
+        const prefix = hex.slice(0, 5), suffix = hex.slice(5);
+        const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, { headers: { 'Add-Padding': 'true' } });
+        
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        const text = await res.text();
+        const match = text.split('\n').find(l => l.toUpperCase().startsWith(suffix));
+        const count = match ? parseInt(match.split(':')[1]) : 0;
+        
+        if (count > 0) {
+            results.innerHTML = `
+                <div class="security-result-card danger">
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                        <span style="font-size:1.5rem;">⚠️</span>
+                        <span style="font-size:1.1rem; font-weight:700; color:#f87171;">Pwned! Found in Breaches</span>
+                    </div>
+                    <p style="margin-bottom:0.5rem; line-height:1.6;">This password has appeared in <strong style="color:#f87171; font-size:1.2rem;">${count.toLocaleString()}</strong> known data breach records.</p>
+                    <p style="font-size:0.9rem; color:#fbbf24; margin-bottom:0;"><strong>Action required:</strong> Change this password immediately on all sites.</p>
+                </div>
+            `;
+        } else {
+            results.innerHTML = `
+                <div class="security-result-card safe">
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                        <span style="font-size:1.5rem;">✅</span>
+                        <span style="font-size:1.1rem; font-weight:700; color:#4ade80;">Not Found in Breaches</span>
+                    </div>
+                    <p style="margin-bottom:0.5rem; line-height:1.6;">This password has not appeared in any known data breach.</p>
+                    <p style="font-size:0.85rem; color:rgba(255,255,255,0.4); margin:0;">Remember: Use unique passwords for every service and enable 2FA.</p>
+                </div>
+            `;
+        }
+    } catch(e) {
+        results.innerHTML = `<div class="security-result-card warning"><p style="margin:0;">Error: ${e.message}</p></div>`;
+    }
 };
 
-// ============================================================
-//  BREACH MONITOR — HIBP k-Anonymity API
-// ============================================================
 window.runBreachCheck = async function() {
     const pass = document.getElementById('sim-breach-pass')?.value?.trim();
     if (!pass) return;

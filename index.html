@@ -520,28 +520,22 @@
         </a>
         <div class="sidebar-section-label">Navigation</div>
         <div class="sidebar-nav">
-            <a href="index.html" class="sidebar-link active">
+            <a href="index.html" class="sidebar-link">
                 <span class="link-icon">🏠</span> <span data-en="Home" data-hi="होम">Home</span>
             </a>
             
             <div class="sidebar-dropdown">
                 <button class="sidebar-link" onclick="this.parentElement.classList.toggle('open')" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> <span data-en="Tools" data-hi="उपकरण">Tools</span><span class="link-badge">11</span></div>
+                    <div style="display:flex;align-items:center;gap:0.75rem;"><span class="link-icon">🛠️</span> <span data-en="Tools" data-hi="उपकरण">Tools</span><span class="link-badge">4</span></div>
                     <span class="dropdown-arrow" style="font-size:0.75rem; transition:transform 0.2s;">▼</span>
                 </button>
                 <div class="sidebar-dropdown-menu">
-                    <a class="sidebar-sublink" onclick="navigateToTool('phishing')">🛡️ Phishing Scanner</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('ai_threat')">🤖 AI Threat Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('deepfake')">🎭 Deepfake Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('blockchain')">⛓️ File Verifier</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('vault')">🔒 Encryption Vault</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('dlp')">🚫 Data Leakage Prev</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('password')">🔐 Password Guardian</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('api_management')">🔑 Secure API Mgmt</a>
                     <a class="sidebar-sublink" onclick="navigateToTool('fraud')">🕵️ Fraud Detection</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('privacy_ai')">🧬 Privacy AI</a>
-                    <a class="sidebar-sublink" onclick="navigateToTool('breach_monitor')">🔍 Breach Monitor</a>
-                    <a href="services.html" class="sidebar-sublink" style="color:#a5b4fc; font-weight:700; margin-top:0.4rem;">↗️ Services Page</a>
+
+                    
                 </div>
             </div>
             
@@ -765,9 +759,6 @@
 <nav class="bottom-nav" id="bottom-nav">
     <a href="index.html" class="bottom-nav-item active">
         <span class="bn-icon">🏠</span>Home
-    </a>
-    <a href="services.html" class="bottom-nav-item">
-        <span class="bn-icon">🛠️</span>Tools
     </a>
     <a href="quiz.html" class="bottom-nav-item">
         <span class="bn-icon">🧠</span>Quiz
